@@ -1,0 +1,26 @@
+[package]
+name = "rust_container_system"
+version = "0.1.0"
+edition = "2021"
+authors = ["Container System Team"]
+license = "BSD-3-Clause"
+description = "A production-ready, high-performance Rust container framework for type-safe data management"
+repository = "https://github.com/kcenon/rust_container_system"
+keywords = ["container", "serialization", "messaging", "type-safe"]
+categories = ["data-structures", "encoding"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+quick-xml = { version = "0.31", features = ["serialize"] }
+thiserror = "2.0"
+parking_lot = "0.12"
+base64 = "0.22"
+
+[dev-dependencies]
+criterion = "0.5"
+proptest = "1.4"
+
+[[bench]]
+name = "container_benchmarks"
+harness = false
