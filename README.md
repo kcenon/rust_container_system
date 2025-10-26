@@ -207,24 +207,81 @@ let handle = thread::spawn(move || {
 handle.join().unwrap();
 ```
 
+### Nested Containers
+
+Create hierarchical data structures using `ContainerValue`:
+
+```rust
+use rust_container_system::prelude::*;
+use std::sync::Arc;
+
+// Create child values (must use Arc<dyn Value> for heterogeneous types)
+let child1: Arc<dyn Value> = Arc::new(IntValue::new("id", 123));
+let child2: Arc<dyn Value> = Arc::new(StringValue::new("name", "Alice"));
+let child3: Arc<dyn Value> = Arc::new(DoubleValue::new("balance", 1500.75));
+
+// Create container with children
+let user_data = Arc::new(ContainerValue::new(
+    "user_data",
+    vec![child1, child2, child3],
+));
+
+println!("Container has {} children", user_data.child_count());
+
+// Access nested data
+if let Some(name_value) = user_data.get_child("name", 0) {
+    println!("Name: {}", name_value.to_string());
+}
+
+// Create complex hierarchical structures
+let profile: Arc<dyn Value> = Arc::new(ContainerValue::new(
+    "profile",
+    vec![
+        Arc::new(StringValue::new("name", "Bob Johnson")),
+        Arc::new(IntValue::new("age", 35)),
+    ],
+));
+
+let preferences: Arc<dyn Value> = Arc::new(ContainerValue::new(
+    "preferences",
+    vec![
+        Arc::new(StringValue::new("theme", "dark")),
+        Arc::new(BoolValue::new("notifications", true)),
+    ],
+));
+
+let user_container = Arc::new(ContainerValue::new(
+    "user",
+    vec![profile, preferences],
+));
+
+// Serialize nested structures
+let json = user_container.to_json().unwrap();
+println!("JSON: {}", json);
+```
+
 ## Project Structure
 
 ```
 rust_container_system/
 ├── src/
 │   ├── core/              # Core types and traits
-│   │   ├── value_types.rs # Value type enum
+│   │   ├── value_types.rs # Value type enum (15 types)
 │   │   ├── value.rs       # Value trait
 │   │   ├── container.rs   # ValueContainer
 │   │   ├── error.rs       # Error types
 │   │   └── mod.rs
 │   ├── values/            # Value implementations
-│   │   ├── primitive_values.rs
-│   │   ├── string_value.rs
-│   │   ├── bytes_value.rs
+│   │   ├── primitive_values.rs  # All numeric types
+│   │   ├── string_value.rs      # String value
+│   │   ├── bytes_value.rs       # Binary data
+│   │   ├── container_value.rs   # Nested containers
 │   │   └── mod.rs
 │   └── lib.rs
 ├── examples/              # Example programs
+│   ├── basic_container.rs       # Basic usage
+│   ├── serialization.rs         # Serialization example
+│   └── nested_containers.rs     # Nested container example
 ├── tests/                 # Integration tests
 ├── benches/              # Benchmarks
 ├── Cargo.toml
