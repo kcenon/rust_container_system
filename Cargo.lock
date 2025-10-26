@@ -571,6 +571,7 @@ dependencies = [
  "parking_lot",
  "proptest",
  "quick-xml",
+ "regex",
  "serde",
  "serde_json",
  "thiserror",

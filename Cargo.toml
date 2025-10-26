@@ -16,6 +16,7 @@ quick-xml = { version = "0.31", features = ["serialize"] }
 thiserror = "2.0"
 parking_lot = "0.12"
 base64 = "0.22"
+regex = "1.10"
 
 [dev-dependencies]
 criterion = "0.5"

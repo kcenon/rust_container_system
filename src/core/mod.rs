@@ -33,6 +33,9 @@ pub mod value_types;
 /// Container implementation
 pub mod container;
 
+/// C++ wire protocol implementation for cross-language compatibility
+pub mod wire_protocol;
+
 /// Re-export error types
 ///
 /// ```rust
