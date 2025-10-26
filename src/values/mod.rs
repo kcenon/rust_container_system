@@ -7,6 +7,7 @@
 //! - `primitive_values`: Bool, Int, Long, Double implementations
 //! - `string_value`: UTF-8 string implementation
 //! - `bytes_value`: Binary data implementation
+//! - `container_value`: Nested container implementation
 
 /// Primitive type implementations (Bool, Short, UShort, Int, UInt, Long, ULong, Float, Double)
 pub mod primitive_values;
@@ -16,6 +17,9 @@ pub mod string_value;
 
 /// Bytes value implementation
 pub mod bytes_value;
+
+/// Container value implementation (nested containers)
+pub mod container_value;
 
 /// Re-export primitive types
 ///
@@ -60,3 +64,19 @@ pub use string_value::StringValue;
 /// println!("Size: {} bytes", bytes.size());
 /// ```
 pub use bytes_value::BytesValue;
+
+/// Re-export container type
+///
+/// ```rust
+/// use rust_container_system::values::{ContainerValue, IntValue, StringValue};
+/// use rust_container_system::core::Value;
+/// use std::sync::Arc;
+///
+/// // Create nested structure
+/// let child1 = Arc::new(IntValue::new("id", 123));
+/// let child2 = Arc::new(StringValue::new("name", "Alice"));
+/// let container = Arc::new(ContainerValue::new("user_data", vec![child1, child2]));
+///
+/// println!("Container has {} children", container.child_count());
+/// ```
+pub use container_value::ContainerValue;

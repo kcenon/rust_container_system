@@ -43,7 +43,7 @@ pub mod values;
 /// ```
 pub mod prelude {
     pub use crate::core::{ContainerError, Result, Value, ValueContainer, ValueContainerBuilder, ValueIter, ValueType};
-    pub use crate::values::{BoolValue, BytesValue, DoubleValue, IntValue, LongValue, StringValue};
+    pub use crate::values::{BoolValue, BytesValue, ContainerValue, DoubleValue, FloatValue, IntValue, LongValue, ShortValue, StringValue, UIntValue, ULongValue, UShortValue};
 }
 
 /// Re-export core types at root level
