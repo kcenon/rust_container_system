@@ -104,6 +104,8 @@ pub fn serialize_cpp_wire(container: &ValueContainer) -> Result<String> {
     // Serialize all values
     container.with_values(|values| {
         for value in values {
+            // Skip values that fail to serialize (e.g., types not yet supported)
+            // Future work: Add full support for all numeric types
             if let Ok(serialized) = serialize_value_cpp(value) {
                 result.push_str(&serialized);
             }
