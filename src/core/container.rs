@@ -430,9 +430,25 @@ impl ValueContainer {
 
     /// Serialize to JSON with type-preserving value serialization
     ///
+    /// # Deprecation Notice
+    ///
+    /// **DEPRECATED**: Use `serialize_cpp_wire()` instead for cross-language compatibility.
+    /// JSON format will be removed in version 2.0.0 (scheduled for July 2025).
+    ///
+    /// Migration guide: <https://github.com/kcenon/container_system/blob/main/MIGRATION_GUIDE.md>
+    ///
     /// Each value is serialized using its own to_json() method, which preserves
     /// type-specific formatting (e.g., BytesValue uses base64 encoding).
+    #[deprecated(
+        since = "1.5.0",
+        note = "Use serialize_cpp_wire() for cross-language compatibility. JSON format will be removed in 2.0.0."
+    )]
     pub fn to_json(&self) -> Result<String> {
+        // Log deprecation warning
+        eprintln!("WARNING: to_json() is deprecated and will be removed in v2.0.0 (July 2025).");
+        eprintln!("         Use serialize_cpp_wire() for cross-language compatibility.");
+        eprintln!("         See: https://github.com/kcenon/container_system/blob/main/MIGRATION_GUIDE.md");
+
         let inner = self.inner.read();
         let mut json_obj = serde_json::json!({
             "source_id": inner.source_id,
@@ -469,10 +485,26 @@ impl ValueContainer {
 
     /// Serialize to XML with optimized string building
     ///
+    /// # Deprecation Notice
+    ///
+    /// **DEPRECATED**: Use `serialize_cpp_wire()` instead for cross-language compatibility.
+    /// XML format will be removed in version 2.0.0 (scheduled for July 2025).
+    ///
+    /// Migration guide: <https://github.com/kcenon/container_system/blob/main/MIGRATION_GUIDE.md>
+    ///
     /// Uses std::fmt::Write to avoid intermediate string allocations
     /// from format!() calls, improving performance especially for containers
     /// with many values.
+    #[deprecated(
+        since = "1.5.0",
+        note = "Use serialize_cpp_wire() for cross-language compatibility. XML format will be removed in 2.0.0."
+    )]
     pub fn to_xml(&self) -> Result<String> {
+        // Log deprecation warning
+        eprintln!("WARNING: to_xml() is deprecated and will be removed in v2.0.0 (July 2025).");
+        eprintln!("         Use serialize_cpp_wire() for cross-language compatibility.");
+        eprintln!("         See: https://github.com/kcenon/container_system/blob/main/MIGRATION_GUIDE.md");
+
         use std::fmt::Write;
 
         let inner = self.inner.read();
