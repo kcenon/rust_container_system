@@ -1,7 +1,7 @@
 # Architecture Documentation - Rust Container System
 
 > **Version:** 0.1.0
-> **Last Updated:** 2025-10-26
+> **Last Updated:** 2025-10-27
 > **Language:** **English** | [한국어](ARCHITECTURE_KO.md)
 
 ---
@@ -901,6 +901,110 @@ fn process_container(container: &ValueContainer) -> Result<()> {
    ```
    - Occurs when adding values exceeds configured limit
    - Prevents unbounded memory growth
+
+---
+
+## Breaking Changes and Migration Guide
+
+### Long/ULong Type Policy (v0.1.0 - 2025-10-27)
+
+**IMPORTANT**: This version introduces breaking changes to `LongValue` and `ULongValue` types to achieve cross-language compatibility and platform independence.
+
+#### Background
+
+Previous versions used platform-dependent `long` types (8 bytes on Unix, 4 bytes on Windows), causing serialization incompatibilities. The new policy enforces strict 32-bit ranges for `LongValue` (type 6) and `ULongValue` (type 7) across all platforms.
+
+#### What Changed
+
+**Type Renames:**
+- Old `LongValue` (i64, type 8) → **`LLongValue`** (64-bit signed)
+- Old `ULongValue` (u64, type 9) → **`ULLongValue`** (64-bit unsigned)
+
+**New 32-bit Types:**
+- **`LongValue`** (i32, type 6): Range [-2³¹, 2³¹-1]
+- **`ULongValue`** (u32, type 7): Range [0, 2³²-1]
+
+**API Changes:**
+- `LongValue::new()` now returns `Result<Self>` instead of `Self`
+- `ULongValue::new()` now returns `Result<Self>` instead of `Self`
+- `From<(String, i64)>` trait replaced with `TryFrom<(String, i64)>` for range checking
+- `LLongValue`/`ULLongValue` still use infallible `From` trait
+
+#### Migration Guide
+
+**Before (v0.0.x):**
+```rust
+use rust_container_system::prelude::*;
+
+// This used i64 internally (type 8)
+let timestamp = LongValue::new("timestamp", 1234567890);
+let large_value = LongValue::new("large", 5_000_000_000); // OK but incompatible
+
+// From trait
+let value: LongValue = ("counter", 12345i64).into();
+```
+
+**After (v0.1.0):**
+```rust
+use rust_container_system::prelude::*;
+
+// For 32-bit values: use LongValue (returns Result)
+let timestamp = LongValue::new("timestamp", 1234567890).unwrap(); // OK: within i32 range
+let timestamp = LongValue::new("timestamp", 1234567890)?; // Or use ? operator
+
+// For 64-bit values: use LLongValue (renamed from LongValue)
+let large_value = LLongValue::new("large", 5_000_000_000); // No Result, always succeeds
+
+// TryFrom for fallible conversions
+let value = LongValue::try_from(("counter", 12345i64))?;
+
+// Or From for infallible conversions with LLongValue
+let value: LLongValue = ("large", 5_000_000_000i64).into();
+```
+
+**Error Handling:**
+```rust
+match LongValue::new("test", user_input) {
+    Ok(value) => {
+        // Value is within 32-bit range
+        container.add_value(Arc::new(value))?;
+    }
+    Err(ContainerError::InvalidTypeConversion { from, to }) => {
+        // Value exceeds 32-bit range, use LLongValue instead
+        let llong_value = LLongValue::new("test", user_input);
+        container.add_value(Arc::new(llong_value))?;
+    }
+    Err(e) => return Err(e),
+}
+```
+
+#### Type Selection Guide
+
+| Value Range | Type to Use | Constructor | Returns |
+|-------------|-------------|-------------|---------|
+| [-2³¹, 2³¹-1] | `LongValue` | `new(name, i64)` | `Result<Self>` |
+| [0, 2³²-1] | `ULongValue` | `new(name, u64)` | `Result<Self>` |
+| Full i64 | `LLongValue` | `new(name, i64)` | `Self` |
+| Full u64 | `ULLongValue` | `new(name, u64)` | `Self` |
+
+#### Serialization Compatibility
+
+After this change, all container systems are compatible:
+
+| Language | Type 6 (long) | Type 7 (ulong) | Bytes | Endianness |
+|----------|---------------|----------------|-------|------------|
+| C++      | int32_t       | uint32_t       | 4     | Little |
+| Python   | int32         | uint32         | 4     | Little |
+| .NET     | int           | uint           | 4     | Little |
+| Go       | int32         | uint32         | 4     | Little |
+| **Rust** | **i32**       | **u32**        | **4** | **Little** |
+
+#### Testing
+
+Comprehensive test suite added in `tests/test_long_range_checking.rs`:
+- 41 tests covering range validation, serialization, error handling
+- All tests passing
+- Verified cross-language compatibility
 
 ---
 
