@@ -295,7 +295,7 @@ fn test_all_primitive_types() {
     // container.add_value(Arc::new(ByteValue::new("byte", 255))).unwrap();
     // container.add_value(Arc::new(ShortValue::new("short", 1000))).unwrap();
     container.add_value(Arc::new(IntValue::new("int", 100000))).unwrap();
-    container.add_value(Arc::new(LongValue::new("long", 1000000000))).unwrap();
+    container.add_value(Arc::new(LongValue::new("long", 1000000000).unwrap())).unwrap();
     // container.add_value(Arc::new(FloatValue::new("float", 3.14))).unwrap();
     container.add_value(Arc::new(DoubleValue::new("double", std::f64::consts::E))).unwrap();
     container.add_value(Arc::new(StringValue::new("string", "hello"))).unwrap();

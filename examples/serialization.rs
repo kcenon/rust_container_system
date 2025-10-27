@@ -19,7 +19,7 @@ fn main() {
     // Add stock market data
     container.add_value(Arc::new(StringValue::new("symbol", "AAPL"))).expect("Failed to add symbol");
     container.add_value(Arc::new(DoubleValue::new("price", 175.50))).expect("Failed to add price");
-    container.add_value(Arc::new(LongValue::new("volume", 1000000))).expect("Failed to add volume");
+    container.add_value(Arc::new(LongValue::new("volume", 1000000).expect("Value out of range"))).expect("Failed to add volume");
     container.add_value(Arc::new(BoolValue::new("is_active", true))).expect("Failed to add is_active");
     container.add_value(Arc::new(IntValue::new("timestamp", 1234567890))).expect("Failed to add timestamp");
 

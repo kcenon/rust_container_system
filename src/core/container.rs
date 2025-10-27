@@ -713,19 +713,33 @@ impl ValueContainer {
                             ))? as u32;
                         Arc::new(UIntValue::new(name, val))
                     }
-                    super::value_types::ValueType::Long | super::value_types::ValueType::LLong => {
+                    super::value_types::ValueType::Long => {
                         let val = value_data.as_i64()
                             .ok_or_else(|| crate::core::ContainerError::InvalidDataFormat(
                                 format!("Invalid long value for '{}'", name)
                             ))?;
-                        Arc::new(LongValue::new(name, val))
+                        Arc::new(LongValue::new(name, val)?)
                     }
-                    super::value_types::ValueType::ULong | super::value_types::ValueType::ULLong => {
+                    super::value_types::ValueType::LLong => {
+                        let val = value_data.as_i64()
+                            .ok_or_else(|| crate::core::ContainerError::InvalidDataFormat(
+                                format!("Invalid llong value for '{}'", name)
+                            ))?;
+                        Arc::new(LLongValue::new(name, val))
+                    }
+                    super::value_types::ValueType::ULong => {
                         let val = value_data.as_u64()
                             .ok_or_else(|| crate::core::ContainerError::InvalidDataFormat(
                                 format!("Invalid ulong value for '{}'", name)
                             ))?;
-                        Arc::new(ULongValue::new(name, val))
+                        Arc::new(ULongValue::new(name, val)?)
+                    }
+                    super::value_types::ValueType::ULLong => {
+                        let val = value_data.as_u64()
+                            .ok_or_else(|| crate::core::ContainerError::InvalidDataFormat(
+                                format!("Invalid ullong value for '{}'", name)
+                            ))?;
+                        Arc::new(ULLongValue::new(name, val))
                     }
                     super::value_types::ValueType::Float => {
                         let val = value_data.as_f64()
@@ -1204,8 +1218,8 @@ mod tests {
         original.add_value(Arc::new(UShortValue::new("us", 200u16))).unwrap();
         original.add_value(Arc::new(IntValue::new("i", 1000))).unwrap();
         original.add_value(Arc::new(UIntValue::new("ui", 2000u32))).unwrap();
-        original.add_value(Arc::new(LongValue::new("l", 100000i64))).unwrap();
-        original.add_value(Arc::new(ULongValue::new("ul", 200000u64))).unwrap();
+        original.add_value(Arc::new(LongValue::new("l", 100000i64).unwrap())).unwrap();
+        original.add_value(Arc::new(ULongValue::new("ul", 200000u64).unwrap())).unwrap();
         original.add_value(Arc::new(FloatValue::new("f", std::f32::consts::PI))).unwrap();
         original.add_value(Arc::new(DoubleValue::new("d", std::f64::consts::E))).unwrap();
         original.add_value(Arc::new(StringValue::new("str", "hello"))).unwrap();
@@ -1322,7 +1336,7 @@ mod tests {
             .message_type("metrics_data")
             .build();
 
-        original.add_value(Arc::new(LongValue::new("timestamp", 1234567890))).unwrap();
+        original.add_value(Arc::new(LongValue::new("timestamp", 1234567890).unwrap())).unwrap();
         original.add_value(Arc::new(DoubleValue::new("cpu_usage", 45.7))).unwrap();
         original.add_value(Arc::new(StringValue::new("hostname", "server1"))).unwrap();
 

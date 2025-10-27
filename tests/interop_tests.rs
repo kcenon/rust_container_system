@@ -169,7 +169,7 @@ fn test_numeric_types_interop() {
 
     // Test working types: Int, Long, Float, Double
     container.add_value(Arc::new(IntValue::new("i32", -123456))).unwrap();
-    container.add_value(Arc::new(LongValue::new("i64", -9876543210))).unwrap();
+    container.add_value(Arc::new(LLongValue::new("i64", -9876543210))).unwrap();
     container.add_value(Arc::new(FloatValue::new("f32", 3.14159))).unwrap();
     container.add_value(Arc::new(DoubleValue::new("f64", 2.71828182845))).unwrap();
 

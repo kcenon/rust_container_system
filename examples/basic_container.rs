@@ -28,7 +28,7 @@ fn main() {
     container.add_value(Arc::new(StringValue::new("username", "john_doe"))).expect("Failed to add username");
     container.add_value(Arc::new(DoubleValue::new("balance", 1500.75))).expect("Failed to add balance");
     container.add_value(Arc::new(BoolValue::new("active", true))).expect("Failed to add active");
-    container.add_value(Arc::new(LongValue::new("timestamp", 1234567890))).expect("Failed to add timestamp");
+    container.add_value(Arc::new(LongValue::new("timestamp", 1234567890).expect("Value out of range"))).expect("Failed to add timestamp");
     println!("  Added {} values\n", container.value_count());
 
     // Retrieve and display values

@@ -73,8 +73,8 @@ fn complex_nested_example() {
     ));
 
     // Create user statistics
-    let stats_login: Arc<dyn Value> = Arc::new(LongValue::new("login_count", 150));
-    let stats_messages: Arc<dyn Value> = Arc::new(LongValue::new("messages_sent", 1250));
+    let stats_login: Arc<dyn Value> = Arc::new(LongValue::new("login_count", 150).expect("Value out of range"));
+    let stats_messages: Arc<dyn Value> = Arc::new(LongValue::new("messages_sent", 1250).expect("Value out of range"));
     let stats_avg_time: Arc<dyn Value> = Arc::new(DoubleValue::new("avg_session_time", 23.5));
     let user_stats = Arc::new(ContainerValue::new(
         "statistics",

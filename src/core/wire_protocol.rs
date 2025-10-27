@@ -364,15 +364,25 @@ pub fn deserialize_cpp_wire(wire_data: &str) -> Result<ValueContainer> {
                         .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid uint: {}", e)))?;
                     Arc::new(UIntValue::new(name, val))
                 }
-                ValueType::Long | ValueType::LLong => {
+                ValueType::Long => {
                     let val: i64 = data_str.parse()
                         .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid long: {}", e)))?;
-                    Arc::new(LongValue::new(name, val))
+                    Arc::new(LongValue::new(name, val)?)
                 }
-                ValueType::ULong | ValueType::ULLong => {
+                ValueType::LLong => {
+                    let val: i64 = data_str.parse()
+                        .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid llong: {}", e)))?;
+                    Arc::new(LLongValue::new(name, val))
+                }
+                ValueType::ULong => {
                     let val: u64 = data_str.parse()
                         .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid ulong: {}", e)))?;
-                    Arc::new(ULongValue::new(name, val))
+                    Arc::new(ULongValue::new(name, val)?)
+                }
+                ValueType::ULLong => {
+                    let val: u64 = data_str.parse()
+                        .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid ullong: {}", e)))?;
+                    Arc::new(ULLongValue::new(name, val))
                 }
                 ValueType::Float => {
                     let val: f32 = data_str.parse()

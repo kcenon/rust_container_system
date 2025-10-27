@@ -36,8 +36,8 @@ pub mod container_value;
 /// ];
 /// ```
 pub use primitive_values::{
-    BoolValue, DoubleValue, FloatValue, IntValue, LongValue, ShortValue, UIntValue, ULongValue,
-    UShortValue,
+    BoolValue, DoubleValue, FloatValue, IntValue, LLongValue, LongValue, ShortValue, UIntValue,
+    ULLongValue, ULongValue, UShortValue,
 };
 
 /// Re-export string type

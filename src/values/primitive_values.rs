@@ -151,14 +151,102 @@ impl Value for IntValue {
     }
 }
 
-/// 64-bit signed integer
+/// 32-bit signed integer (type 6) with strict range enforcement.
+/// Policy: Enforces 32-bit range [-2^31, 2^31-1].
+/// Values exceeding this range should use LLongValue.
+/// Always serializes as 4 bytes regardless of platform.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LongValue {
+    name: String,
+    value: i32,
+}
+
+impl LongValue {
+    pub fn new(name: impl Into<String>, value: i64) -> Result<Self> {
+        let val32 = i32::try_from(value).map_err(|_| {
+            ContainerError::InvalidTypeConversion {
+                from: format!("i64({})", value),
+                to: "i32 (long_value, type 6)".to_string(),
+            }
+        })?;
+        Ok(Self {
+            name: name.into(),
+            value: val32,
+        })
+    }
+
+    pub fn value(&self) -> i32 {
+        self.value
+    }
+}
+
+impl Value for LongValue {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn value_type(&self) -> ValueType {
+        ValueType::Long
+    }
+
+    fn size(&self) -> usize {
+        4  // Always 4 bytes
+    }
+
+    fn to_long(&self) -> Result<i64> {
+        Ok(self.value as i64)
+    }
+
+    fn to_int(&self) -> Result<i32> {
+        Ok(self.value)
+    }
+
+    fn to_float(&self) -> Result<f32> {
+        Ok(self.value as f32)
+    }
+
+    fn to_double(&self) -> Result<f64> {
+        Ok(self.value as f64)
+    }
+
+    fn to_string(&self) -> String {
+        self.value.to_string()
+    }
+
+    fn to_bytes(&self) -> Vec<u8> {
+        self.value.to_le_bytes().to_vec()
+    }
+
+    fn to_json(&self) -> Result<String> {
+        let tagged = serde_json::json!({
+            "type": "long",
+            "value": self.value
+        });
+        serde_json::to_string(&tagged).map_err(Into::into)
+    }
+
+    fn to_xml(&self) -> Result<String> {
+        Ok(format!("<long>{}</long>", crate::core::xml_escape(&self.value.to_string())))
+    }
+
+    fn clone_value(&self) -> Arc<dyn Value> {
+        Arc::new(self.clone())
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+/// 64-bit signed integer (type 8) for large values.
+/// Use this for values exceeding 32-bit range.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LLongValue {
     name: String,
     value: i64,
 }
 
-impl LongValue {
+impl LLongValue {
     pub fn new(name: impl Into<String>, value: i64) -> Self {
         Self {
             name: name.into(),
@@ -171,7 +259,7 @@ impl LongValue {
     }
 }
 
-impl Value for LongValue {
+impl Value for LLongValue {
     fn name(&self) -> &str {
         &self.name
     }
@@ -214,16 +302,15 @@ impl Value for LongValue {
     }
 
     fn to_json(&self) -> Result<String> {
-        // Use tagged format to preserve type information (i32 vs i64)
         let tagged = serde_json::json!({
-            "type": "long",
+            "type": "llong",
             "value": self.value
         });
         serde_json::to_string(&tagged).map_err(Into::into)
     }
 
     fn to_xml(&self) -> Result<String> {
-        Ok(format!("<long>{}</long>", crate::core::xml_escape(&self.value.to_string())))
+        Ok(format!("<llong>{}</llong>", crate::core::xml_escape(&self.value.to_string())))
     }
 
     fn clone_value(&self) -> Arc<dyn Value> {
@@ -474,14 +561,107 @@ impl Value for UIntValue {
     }
 }
 
-/// 64-bit unsigned integer
+/// 32-bit unsigned integer (type 7) with strict range enforcement.
+/// Policy: Enforces 32-bit range [0, 2^32-1].
+/// Values exceeding this range should use ULLongValue.
+/// Always serializes as 4 bytes regardless of platform.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ULongValue {
+    name: String,
+    value: u32,
+}
+
+impl ULongValue {
+    pub fn new(name: impl Into<String>, value: u64) -> Result<Self> {
+        let val32 = u32::try_from(value).map_err(|_| {
+            ContainerError::InvalidTypeConversion {
+                from: format!("u64({})", value),
+                to: "u32 (ulong_value, type 7)".to_string(),
+            }
+        })?;
+        Ok(Self {
+            name: name.into(),
+            value: val32,
+        })
+    }
+
+    pub fn value(&self) -> u32 {
+        self.value
+    }
+}
+
+impl Value for ULongValue {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn value_type(&self) -> ValueType {
+        ValueType::ULong
+    }
+
+    fn size(&self) -> usize {
+        4  // Always 4 bytes
+    }
+
+    fn to_int(&self) -> Result<i32> {
+        self.value
+            .try_into()
+            .map_err(|_| ContainerError::InvalidTypeConversion {
+                from: "u32".to_string(),
+                to: "i32".to_string(),
+            })
+    }
+
+    fn to_long(&self) -> Result<i64> {
+        Ok(self.value as i64)
+    }
+
+    fn to_float(&self) -> Result<f32> {
+        Ok(self.value as f32)
+    }
+
+    fn to_double(&self) -> Result<f64> {
+        Ok(self.value as f64)
+    }
+
+    fn to_string(&self) -> String {
+        self.value.to_string()
+    }
+
+    fn to_bytes(&self) -> Vec<u8> {
+        self.value.to_le_bytes().to_vec()
+    }
+
+    fn to_json(&self) -> Result<String> {
+        let tagged = serde_json::json!({
+            "type": "ulong",
+            "value": self.value
+        });
+        serde_json::to_string(&tagged).map_err(Into::into)
+    }
+
+    fn to_xml(&self) -> Result<String> {
+        Ok(format!("<ulong>{}</ulong>", crate::core::xml_escape(&self.value.to_string())))
+    }
+
+    fn clone_value(&self) -> Arc<dyn Value> {
+        Arc::new(self.clone())
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+/// 64-bit unsigned integer (type 9) for large values.
+/// Use this for values exceeding 32-bit range.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ULLongValue {
     name: String,
     value: u64,
 }
 
-impl ULongValue {
+impl ULLongValue {
     pub fn new(name: impl Into<String>, value: u64) -> Self {
         Self {
             name: name.into(),
@@ -494,7 +674,7 @@ impl ULongValue {
     }
 }
 
-impl Value for ULongValue {
+impl Value for ULLongValue {
     fn name(&self) -> &str {
         &self.name
     }
@@ -543,14 +723,14 @@ impl Value for ULongValue {
 
     fn to_json(&self) -> Result<String> {
         let tagged = serde_json::json!({
-            "type": "ulong",
+            "type": "ullong",
             "value": self.value
         });
         serde_json::to_string(&tagged).map_err(Into::into)
     }
 
     fn to_xml(&self) -> Result<String> {
-        Ok(format!("<ulong>{}</ulong>", crate::core::xml_escape(&self.value.to_string())))
+        Ok(format!("<ullong>{}</ullong>", crate::core::xml_escape(&self.value.to_string())))
     }
 
     fn clone_value(&self) -> Arc<dyn Value> {
@@ -805,13 +985,29 @@ impl From<(&str, i32)> for IntValue {
     }
 }
 
-impl From<(String, i64)> for LongValue {
+// LongValue now returns Result, so use TryFrom
+impl TryFrom<(String, i64)> for LongValue {
+    type Error = ContainerError;
+    fn try_from((name, value): (String, i64)) -> Result<Self> {
+        Self::new(name, value)
+    }
+}
+
+impl TryFrom<(&str, i64)> for LongValue {
+    type Error = ContainerError;
+    fn try_from((name, value): (&str, i64)) -> Result<Self> {
+        Self::new(name, value)
+    }
+}
+
+// LLongValue uses the old From implementation
+impl From<(String, i64)> for LLongValue {
     fn from((name, value): (String, i64)) -> Self {
         Self::new(name, value)
     }
 }
 
-impl From<(&str, i64)> for LongValue {
+impl From<(&str, i64)> for LLongValue {
     fn from((name, value): (&str, i64)) -> Self {
         Self::new(name, value)
     }
@@ -865,13 +1061,29 @@ impl From<(&str, u32)> for UIntValue {
     }
 }
 
-impl From<(String, u64)> for ULongValue {
+// ULongValue now returns Result, so use TryFrom
+impl TryFrom<(String, u64)> for ULongValue {
+    type Error = ContainerError;
+    fn try_from((name, value): (String, u64)) -> Result<Self> {
+        Self::new(name, value)
+    }
+}
+
+impl TryFrom<(&str, u64)> for ULongValue {
+    type Error = ContainerError;
+    fn try_from((name, value): (&str, u64)) -> Result<Self> {
+        Self::new(name, value)
+    }
+}
+
+// ULLongValue uses the old From implementation
+impl From<(String, u64)> for ULLongValue {
     fn from((name, value): (String, u64)) -> Self {
         Self::new(name, value)
     }
 }
 
-impl From<(&str, u64)> for ULongValue {
+impl From<(&str, u64)> for ULLongValue {
     fn from((name, value): (&str, u64)) -> Self {
         Self::new(name, value)
     }
@@ -917,11 +1129,24 @@ mod tests {
 
     #[test]
     fn test_long_from_tuple() {
-        let value1: LongValue = ("large", 9223372036854775807i64).into();
+        // LongValue now only accepts 32-bit values via TryFrom
+        let value1 = LongValue::try_from(("timestamp".to_string(), 1234567890i64)).unwrap();
+        assert_eq!(value1.name(), "timestamp");
+        assert_eq!(value1.value(), 1234567890i32);
+
+        let value2 = LongValue::try_from((String::from("count"), 12345i64)).unwrap();
+        assert_eq!(value2.name(), "count");
+        assert_eq!(value2.value(), 12345i32);
+    }
+
+    #[test]
+    fn test_llong_from_tuple() {
+        // LLongValue accepts full 64-bit range via From
+        let value1: LLongValue = ("large", 9223372036854775807i64).into();
         assert_eq!(value1.name(), "large");
         assert_eq!(value1.value(), 9223372036854775807i64);
 
-        let value2: LongValue = (String::from("timestamp"), 1234567890i64).into();
+        let value2: LLongValue = (String::from("timestamp"), 1234567890i64).into();
         assert_eq!(value2.name(), "timestamp");
         assert_eq!(value2.value(), 1234567890i64);
     }

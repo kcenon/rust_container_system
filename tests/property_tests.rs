@@ -25,10 +25,18 @@ proptest! {
         assert_eq!(int_val.name(), "test");
     }
 
-    /// Test that Long values roundtrip correctly
+    /// Test that LLong values (64-bit) roundtrip correctly
     #[test]
-    fn test_long_roundtrip(value in any::<i64>()) {
-        let long_val = LongValue::new("test", value);
+    fn test_llong_roundtrip(value in any::<i64>()) {
+        let llong_val = LLongValue::new("test", value);
+        assert_eq!(llong_val.to_long().unwrap(), value);
+        assert_eq!(llong_val.name(), "test");
+    }
+
+    /// Test that Long values (32-bit) roundtrip correctly for valid range
+    #[test]
+    fn test_long_roundtrip(value in (i32::MIN as i64)..(i32::MAX as i64)) {
+        let long_val = LongValue::new("test", value).unwrap();
         assert_eq!(long_val.to_long().unwrap(), value);
         assert_eq!(long_val.name(), "test");
     }
@@ -225,7 +233,7 @@ proptest! {
     /// Test that value cloning works correctly
     #[test]
     fn test_value_clone(value in any::<i64>()) {
-        let original = LongValue::new("test", value);
+        let original = LLongValue::new("test", value);
         let cloned = original.clone();
 
         assert_eq!(original.name(), cloned.name());
