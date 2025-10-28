@@ -46,7 +46,32 @@ impl Value for StringValue {
     }
 
     fn to_bytes(&self) -> Vec<u8> {
-        self.value.as_bytes().to_vec()
+        // Complete binary format with header
+        // Format: [type:1][name_len:4][name][value_size:4][string_bytes]
+        let name_bytes = self.name.as_bytes();
+        let name_len = name_bytes.len() as u32;
+
+        let value_bytes = self.value.as_bytes();
+        let value_size = value_bytes.len() as u32;
+
+        let mut result = Vec::with_capacity(1 + 4 + name_bytes.len() + 4 + value_bytes.len());
+
+        // Type (1 byte) - StringValue = 1
+        result.push(ValueType::String as u8);
+
+        // Name length (4 bytes, little-endian)
+        result.extend_from_slice(&name_len.to_le_bytes());
+
+        // Name (UTF-8 bytes)
+        result.extend_from_slice(name_bytes);
+
+        // Value size (4 bytes, little-endian)
+        result.extend_from_slice(&value_size.to_le_bytes());
+
+        // String bytes (UTF-8)
+        result.extend_from_slice(value_bytes);
+
+        result
     }
 
     fn to_json(&self) -> Result<String> {

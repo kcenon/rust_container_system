@@ -358,8 +358,8 @@ impl ArrayValue {
             9 => ValueType::ULLong,
             10 => ValueType::Float,
             11 => ValueType::Double,
-            12 => ValueType::String,
-            13 => ValueType::Bytes,
+            12 => ValueType::Bytes,
+            13 => ValueType::String,
             14 => ValueType::Container,
             15 => ValueType::Array,
             _ => {

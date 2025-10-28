@@ -126,7 +126,30 @@ impl Value for IntValue {
     }
 
     fn to_bytes(&self) -> Vec<u8> {
-        self.value.to_le_bytes().to_vec()
+        // Complete binary format with header
+        // Format: [type:1][name_len:4][name][value_size:4][value:4]
+        let name_bytes = self.name.as_bytes();
+        let name_len = name_bytes.len() as u32;
+        let value_size = 4u32; // i32 = 4 bytes
+
+        let mut result = Vec::with_capacity(1 + 4 + name_bytes.len() + 4 + 4);
+
+        // Type (1 byte) - IntValue = 4
+        result.push(ValueType::Int as u8);
+
+        // Name length (4 bytes, little-endian)
+        result.extend_from_slice(&name_len.to_le_bytes());
+
+        // Name (UTF-8 bytes)
+        result.extend_from_slice(name_bytes);
+
+        // Value size (4 bytes, little-endian)
+        result.extend_from_slice(&value_size.to_le_bytes());
+
+        // Value (4 bytes, little-endian)
+        result.extend_from_slice(&self.value.to_le_bytes());
+
+        result
     }
 
     fn to_json(&self) -> Result<String> {
@@ -214,7 +237,30 @@ impl Value for LongValue {
     }
 
     fn to_bytes(&self) -> Vec<u8> {
-        self.value.to_le_bytes().to_vec()
+        // Complete binary format with header
+        // Format: [type:1][name_len:4][name][value_size:4][value:4]
+        let name_bytes = self.name.as_bytes();
+        let name_len = name_bytes.len() as u32;
+        let value_size = 4u32; // i32 = 4 bytes
+
+        let mut result = Vec::with_capacity(1 + 4 + name_bytes.len() + 4 + 4);
+
+        // Type (1 byte) - LongValue = 6
+        result.push(ValueType::Long as u8);
+
+        // Name length (4 bytes, little-endian)
+        result.extend_from_slice(&name_len.to_le_bytes());
+
+        // Name (UTF-8 bytes)
+        result.extend_from_slice(name_bytes);
+
+        // Value size (4 bytes, little-endian)
+        result.extend_from_slice(&value_size.to_le_bytes());
+
+        // Value (4 bytes, little-endian)
+        result.extend_from_slice(&self.value.to_le_bytes());
+
+        result
     }
 
     fn to_json(&self) -> Result<String> {
