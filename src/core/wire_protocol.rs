@@ -45,6 +45,7 @@
 
 use crate::core::{ContainerError, Result, Value, ValueContainer};
 use crate::core::value_types::ValueType;
+use crate::values::ArrayValue;
 use std::sync::Arc;
 
 // C++ header field IDs (matching container.cpp constants)
@@ -177,7 +178,11 @@ fn serialize_value_cpp(value: &Arc<dyn Value>) -> Result<String> {
         }
         ValueType::Array => {
             // For arrays, store element count (matching ArrayValue behavior)
-            "0".to_string() // Placeholder - full support requires ArrayValue count method
+            if let Some(array_val) = value.as_any().downcast_ref::<ArrayValue>() {
+                array_val.count().to_string()
+            } else {
+                "0".to_string()
+            }
         }
         ValueType::Null => {
             String::new()
@@ -407,10 +412,16 @@ pub fn deserialize_cpp_wire(wire_data: &str) -> Result<ValueContainer> {
                     let bytes = hex_to_bytes(data_str)?;
                     Arc::new(BytesValue::new(name, bytes))
                 }
-                ValueType::Container | ValueType::Array | ValueType::Null => {
-                    // TODO: Implement nested container/array support
+                ValueType::Array => {
+                    // TODO: Implement nested array element deserialization
+                    // For now, create empty ArrayValue (count is available but elements are not parsed)
+                    let _count: usize = data_str.parse().unwrap_or(0);
+                    Arc::new(ArrayValue::new(name, vec![]))
+                }
+                ValueType::Container | ValueType::Null => {
+                    // TODO: Implement nested container support
                     return Err(ContainerError::InvalidDataFormat(
-                        format!("Container/Array value deserialization not yet implemented: {}", name)
+                        format!("Container value deserialization not yet implemented: {}", name)
                     ));
                 }
             };
