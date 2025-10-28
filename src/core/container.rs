@@ -778,7 +778,7 @@ impl ValueContainer {
 
                         Arc::new(BytesValue::new(name, bytes))
                     }
-                    super::value_types::ValueType::Null | super::value_types::ValueType::Container => {
+                    super::value_types::ValueType::Null | super::value_types::ValueType::Container | super::value_types::ValueType::Array => {
                         return Err(crate::core::ContainerError::InvalidDataFormat(
                             format!("Unsupported value type for deserialization: {:?}", value_type)
                         ));

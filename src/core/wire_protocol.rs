@@ -175,6 +175,10 @@ fn serialize_value_cpp(value: &Arc<dyn Value>) -> Result<String> {
             // Note: child_count() support requires ContainerValue implementation
             "0".to_string() // Placeholder - full support requires ContainerValue
         }
+        ValueType::Array => {
+            // For arrays, store element count (matching ArrayValue behavior)
+            "0".to_string() // Placeholder - full support requires ArrayValue count method
+        }
         ValueType::Null => {
             String::new()
         }
@@ -200,6 +204,7 @@ fn value_type_to_cpp_name(vt: ValueType) -> &'static str {
         ValueType::String => "string_value",
         ValueType::Bytes => "bytes_value",
         ValueType::Container => "container_value",
+        ValueType::Array => "array_value",
         ValueType::Null => "null_value",
     }
 }
@@ -221,6 +226,7 @@ fn cpp_name_to_value_type(name: &str) -> Option<ValueType> {
         "string_value" => Some(ValueType::String),
         "bytes_value" => Some(ValueType::Bytes),
         "container_value" => Some(ValueType::Container),
+        "array_value" => Some(ValueType::Array),
         "null_value" => Some(ValueType::Null),
         _ => None,
     }
@@ -401,10 +407,10 @@ pub fn deserialize_cpp_wire(wire_data: &str) -> Result<ValueContainer> {
                     let bytes = hex_to_bytes(data_str)?;
                     Arc::new(BytesValue::new(name, bytes))
                 }
-                ValueType::Container | ValueType::Null => {
-                    // TODO: Implement nested container support
+                ValueType::Container | ValueType::Array | ValueType::Null => {
+                    // TODO: Implement nested container/array support
                     return Err(ContainerError::InvalidDataFormat(
-                        format!("Container value deserialization not yet implemented: {}", name)
+                        format!("Container/Array value deserialization not yet implemented: {}", name)
                     ));
                 }
             };

@@ -40,6 +40,8 @@ pub enum ValueType {
     String = 13,
     /// Nested container
     Container = 14,
+    /// Array/list of values
+    Array = 15,
 }
 
 impl ValueType {
@@ -69,6 +71,7 @@ impl ValueType {
             "12" => Some(ValueType::Bytes),
             "13" => Some(ValueType::String),
             "14" => Some(ValueType::Container),
+            "15" => Some(ValueType::Array),
             _ => None,
         }
     }
@@ -99,6 +102,7 @@ impl ValueType {
             ValueType::Bytes => "12",
             ValueType::String => "13",
             ValueType::Container => "14",
+            ValueType::Array => "15",
         }
     }
 
@@ -188,7 +192,7 @@ impl ValueType {
             | ValueType::LLong
             | ValueType::ULLong
             | ValueType::Double => Some(8),
-            ValueType::Bytes | ValueType::String | ValueType::Container => None,
+            ValueType::Bytes | ValueType::String | ValueType::Container | ValueType::Array => None,
         }
     }
 }
@@ -214,6 +218,7 @@ impl fmt::Display for ValueType {
                 ValueType::Bytes => "bytes_value",
                 ValueType::String => "string_value",
                 ValueType::Container => "container_value",
+                ValueType::Array => "array_value",
             }
         )
     }

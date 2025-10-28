@@ -21,6 +21,9 @@ pub mod bytes_value;
 /// Container value implementation (nested containers)
 pub mod container_value;
 
+/// Array value implementation (arrays/lists)
+pub mod array_value;
+
 /// Re-export primitive types
 ///
 /// ```rust
@@ -80,3 +83,19 @@ pub use bytes_value::BytesValue;
 /// println!("Container has {} children", container.child_count());
 /// ```
 pub use container_value::ContainerValue;
+
+/// Re-export array type
+///
+/// ```rust
+/// use rust_container_system::values::{ArrayValue, IntValue, StringValue};
+/// use rust_container_system::core::Value;
+/// use std::sync::Arc;
+///
+/// // Create array structure
+/// let elem1 = Arc::new(IntValue::new("", 10));
+/// let elem2 = Arc::new(IntValue::new("", 20));
+/// let array = Arc::new(ArrayValue::new("numbers", vec![elem1, elem2]));
+///
+/// println!("Array has {} elements", array.count());
+/// ```
+pub use array_value::ArrayValue;
