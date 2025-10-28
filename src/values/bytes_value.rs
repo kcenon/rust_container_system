@@ -54,7 +54,30 @@ impl Value for BytesValue {
     }
 
     fn to_bytes(&self) -> Vec<u8> {
-        self.data.clone()
+        // Complete binary format with header
+        // Format: [type:1][name_len:4][name][value_size:4][bytes]
+        let name_bytes = self.name.as_bytes();
+        let name_len = name_bytes.len() as u32;
+        let value_size = self.data.len() as u32;
+
+        let mut result = Vec::with_capacity(1 + 4 + name_bytes.len() + 4 + self.data.len());
+
+        // Type (1 byte) - BytesValue = 12
+        result.push(ValueType::Bytes as u8);
+
+        // Name length (4 bytes, little-endian)
+        result.extend_from_slice(&name_len.to_le_bytes());
+
+        // Name (UTF-8 bytes)
+        result.extend_from_slice(name_bytes);
+
+        // Value size (4 bytes, little-endian)
+        result.extend_from_slice(&value_size.to_le_bytes());
+
+        // Raw bytes
+        result.extend_from_slice(&self.data);
+
+        result
     }
 
     /// Serialize to JSON using Base64 encoding with type tag
