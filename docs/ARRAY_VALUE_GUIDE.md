@@ -1,8 +1,60 @@
 # ArrayValue Implementation Guide (Rust)
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Quick Start](#quick-start)
+- [Architecture](#architecture)
+- [Usage Examples](#usage-examples)
+- [API Reference](#api-reference)
+- [Serialization](#serialization)
+- [Cross-Language Interoperability](#cross-language-interoperability)
+- [Error Handling](#error-handling)
+- [Best Practices](#best-practices)
+- [Troubleshooting](#troubleshooting)
+- [See Also](#see-also)
+
 ## Overview
 
 `ArrayValue` is a Rust implementation of type-15 array values that provides heterogeneous collections with full cross-language compatibility. It leverages Rust's type safety, ownership system, and trait-based polymorphism.
+
+**Key Features:**
+- ✅ Type-safe heterogeneous collections with Arc<dyn Value>
+- ✅ Ownership tracking with Rust's borrow checker
+- ✅ Option-based error handling (no panics on out-of-bounds)
+- ✅ Full Value trait implementation
+- ✅ Zero-cost abstractions with trait objects
+- ✅ Cross-language serialization compatibility
+
+## Quick Start
+
+### 5-Minute Introduction
+
+```rust
+use rust_container_system::values::{ArrayValue, IntValue};
+use std::sync::Arc;
+
+// 1. Create empty array
+let mut numbers = ArrayValue::new("numbers", vec![]);
+
+// 2. Add elements
+numbers.push(Arc::new(IntValue::new("", 42)));
+numbers.push(Arc::new(IntValue::new("", 100)));
+
+// 3. Access elements (Option-based, no panic)
+if let Some(first) = numbers.at(0) {
+    println!("First element added");
+}
+
+// 4. Check count
+println!("Count: {}", numbers.count());
+
+// 5. Serialize
+let bytes = numbers.to_bytes();
+println!("Serialized {} bytes", bytes.len());
+```
+
+**That's it!** You're using ArrayValue in Rust. Read on for advanced patterns.
 
 ## Architecture
 
@@ -551,6 +603,152 @@ array.push(Arc::new(IntValue::new("", 10)));
 - Serialization support (to_bytes, to_json, to_xml)
 - Cross-language compatibility
 - Clear ownership semantics
+
+## API Reference
+
+### Constructor Methods
+
+| Method | Description |
+|--------|-------------|
+| `new(name, elements)` | Create ArrayValue with initial elements |
+| `with_capacity(name, capacity)` | Create with pre-allocated capacity |
+| `clone()` | Deep clone (implements Clone trait) |
+
+### Element Manipulation
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `push(&mut self, element)` | `()` | Add element (primary method) |
+| `push_back(&mut self, element)` | `()` | Alias for push() |
+| `at(&self, index)` | `Option<Arc<dyn Value>>` | Get element, None if invalid |
+| `count(&self)` | `usize` | Get number of elements |
+| `is_empty(&self)` | `bool` | Check if array is empty |
+| `clear(&mut self)` | `()` | Remove all elements |
+| `elements(&self)` | `&[Arc<dyn Value>]` | Get slice of all elements |
+
+### Value Trait Methods
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `name(&self)` | `&str` | Get array name |
+| `value_type(&self)` | `ValueType` | Returns `ValueType::Array` |
+| `size(&self)` | `usize` | Get binary size in bytes |
+| `to_bytes(&self)` | `Vec<u8>` | Serialize to binary format |
+| `to_json(&self)` | `Result<String>` | Serialize to JSON |
+| `to_xml(&self)` | `Result<String>` | Serialize to XML |
+| `clone_value(&self)` | `Arc<dyn Value>` | Clone as trait object |
+| `as_any(&self)` | `&dyn Any` | Downcast support |
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+#### Issue: Borrow checker errors with mutable access
+
+**Problem:**
+```rust
+let mut array = ArrayValue::new("data", vec![]);
+array.push(element1);
+let first = array.at(0); // Borrow
+array.push(element2); // Error: cannot borrow as mutable
+```
+
+**Solution:**
+```rust
+let mut array = ArrayValue::new("data", vec![]);
+array.push(element1);
+{
+    let first = array.at(0); // Borrow ends at scope end
+    // Use first
+} // Borrow released
+array.push(element2); // OK
+```
+
+#### Issue: Cannot move out of Arc
+
+**Problem:**
+```rust
+let element = array.at(0).unwrap();
+// Cannot get owned IntValue from Arc<dyn Value>
+```
+
+**Solution:**
+```rust
+// Use references or clone Arc
+if let Some(elem) = array.at(0) {
+    if let Some(int_val) = elem.as_any().downcast_ref::<IntValue>() {
+        println!("Value: {}", int_val.value());
+    }
+}
+```
+
+#### Issue: Type downcast fails
+
+**Problem:**
+```rust
+let elem = array.at(0).unwrap();
+let int_val = elem.as_any().downcast_ref::<IntValue>();
+// Returns None
+```
+
+**Solution:**
+```rust
+// Always check ValueType first
+let elem = array.at(0).unwrap();
+if elem.value_type() == ValueType::Int {
+    if let Some(int_val) = elem.as_any().downcast_ref::<IntValue>() {
+        // Safe to use
+    }
+}
+```
+
+#### Issue: Compilation error with trait objects
+
+**Problem:**
+```
+error: the trait `Value` cannot be made into an object
+```
+
+**Solution:**
+Ensure Value trait is object-safe. All methods must:
+- Not use `Self` in return type (use `Arc<dyn Value>`)
+- Not have generic type parameters
+- Use `&self` or `&mut self` receivers
+
+#### Issue: Performance concerns with Arc cloning
+
+**Problem:** Worried about performance of `Arc::clone()`.
+
+**Solution:**
+`Arc::clone()` only increments a reference counter (atomic operation). It does NOT deep-copy the data. Very cheap operation.
+
+```rust
+let elem = Arc::new(IntValue::new("", 42));
+let clone1 = elem.clone(); // Just ref count++
+let clone2 = elem.clone(); // Just ref count++
+// All point to same IntValue
+```
+
+### Debugging Tips
+
+1. **Print with Debug trait:**
+   ```rust
+   println!("{:?}", array);
+   ```
+
+2. **Check element types:**
+   ```rust
+   for (i, elem) in array.elements().iter().enumerate() {
+       println!("Element {} type: {:?}", i, elem.value_type());
+   }
+   ```
+
+3. **Validate serialization:**
+   ```rust
+   let bytes = array.to_bytes();
+   println!("Serialized {} bytes", bytes.len());
+   ```
+
 
 ## See Also
 
