@@ -3,6 +3,11 @@
 use crate::core::error::Result;
 use crate::core::value::Value;
 use crate::core::value_types::ValueType;
+use crate::values::primitive_values::{
+    BoolValue, ShortValue, UShortValue, UIntValue,
+    ULongValue, FloatValue, DoubleValue,
+};
+use crate::values::bytes_value::BytesValue;
 use std::any::Any;
 use std::fmt;
 use std::sync::Arc;
@@ -431,6 +436,241 @@ impl ArrayValue {
                 offset += 8;
 
                 Ok((Arc::new(LongValue::new(name, value)?), offset))
+            }
+
+            ValueType::Bool => {
+                // Deserialize BoolValue (type 1)
+                // Format: [type:1][name_len:4][name][value_size:4][value:1]
+                if data.len() < 10 {
+                    return Err(ContainerError::InvalidDataFormat(
+                        "Insufficient data for BoolValue".to_string()
+                    ));
+                }
+
+                let mut offset = 1;
+
+                let name_len = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                offset += 4;
+
+                if offset + name_len + 4 + 1 > data.len() {
+                    return Err(ContainerError::InvalidDataFormat(
+                        "Data too short for BoolValue".to_string()
+                    ));
+                }
+
+                let name = String::from_utf8(data[offset..offset + name_len].to_vec())
+                    .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e)))?;
+                offset += name_len;
+
+                offset += 4; // Skip value_size
+
+                let value = data[offset] != 0;
+                offset += 1;
+
+                Ok((Arc::new(BoolValue::new(name, value)), offset))
+            }
+
+            ValueType::Short => {
+                // Deserialize ShortValue (type 2)
+                // Format: [type:1][name_len:4][name][value_size:4][value:2]
+                if data.len() < 11 {
+                    return Err(ContainerError::InvalidDataFormat(
+                        "Insufficient data for ShortValue".to_string()
+                    ));
+                }
+
+                let mut offset = 1;
+
+                let name_len = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                offset += 4;
+
+                if offset + name_len + 4 + 2 > data.len() {
+                    return Err(ContainerError::InvalidDataFormat(
+                        "Data too short for ShortValue".to_string()
+                    ));
+                }
+
+                let name = String::from_utf8(data[offset..offset + name_len].to_vec())
+                    .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e)))?;
+                offset += name_len;
+
+                offset += 4; // Skip value_size
+
+                let value = i16::from_le_bytes([data[offset], data[offset + 1]]);
+                offset += 2;
+
+                Ok((Arc::new(ShortValue::new(name, value)), offset))
+            }
+
+            ValueType::UShort => {
+                // Deserialize UShortValue (type 3)
+                // Format: [type:1][name_len:4][name][value_size:4][value:2]
+                if data.len() < 11 {
+                    return Err(ContainerError::InvalidDataFormat(
+                        "Insufficient data for UShortValue".to_string()
+                    ));
+                }
+
+                let mut offset = 1;
+
+                let name_len = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                offset += 4;
+
+                if offset + name_len + 4 + 2 > data.len() {
+                    return Err(ContainerError::InvalidDataFormat(
+                        "Data too short for UShortValue".to_string()
+                    ));
+                }
+
+                let name = String::from_utf8(data[offset..offset + name_len].to_vec())
+                    .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e)))?;
+                offset += name_len;
+
+                offset += 4; // Skip value_size
+
+                let value = u16::from_le_bytes([data[offset], data[offset + 1]]);
+                offset += 2;
+
+                Ok((Arc::new(UShortValue::new(name, value)), offset))
+            }
+
+            ValueType::UInt => {
+                // Deserialize UIntValue (type 5)
+                // Format: [type:1][name_len:4][name][value_size:4][value:4]
+                if data.len() < 13 {
+                    return Err(ContainerError::InvalidDataFormat(
+                        "Insufficient data for UIntValue".to_string()
+                    ));
+                }
+
+                let mut offset = 1;
+
+                let name_len = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                offset += 4;
+
+                let name = String::from_utf8(data[offset..offset + name_len].to_vec())
+                    .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e)))?;
+                offset += name_len;
+
+                offset += 4; // Skip value_size
+
+                let value = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+                offset += 4;
+
+                Ok((Arc::new(UIntValue::new(name, value)), offset))
+            }
+
+            ValueType::ULong | ValueType::ULLong => {
+                // Deserialize ULongValue or ULLongValue (type 7 or 9)
+                // Format: [type:1][name_len:4][name][value_size:4][value:8]
+                if data.len() < 17 {
+                    return Err(ContainerError::InvalidDataFormat(
+                        "Insufficient data for ULongValue/ULLongValue".to_string()
+                    ));
+                }
+
+                let mut offset = 1;
+
+                let name_len = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                offset += 4;
+
+                let name = String::from_utf8(data[offset..offset + name_len].to_vec())
+                    .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e)))?;
+                offset += name_len;
+
+                offset += 4; // Skip value_size
+
+                let value = u64::from_le_bytes([
+                    data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+                    data[offset + 4], data[offset + 5], data[offset + 6], data[offset + 7],
+                ]);
+                offset += 8;
+
+                Ok((Arc::new(ULongValue::new(name, value)?), offset))
+            }
+
+            ValueType::Float => {
+                // Deserialize FloatValue (type 10)
+                // Format: [type:1][name_len:4][name][value_size:4][value:4]
+                if data.len() < 13 {
+                    return Err(ContainerError::InvalidDataFormat(
+                        "Insufficient data for FloatValue".to_string()
+                    ));
+                }
+
+                let mut offset = 1;
+
+                let name_len = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                offset += 4;
+
+                let name = String::from_utf8(data[offset..offset + name_len].to_vec())
+                    .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e)))?;
+                offset += name_len;
+
+                offset += 4; // Skip value_size
+
+                let bits = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+                let value = f32::from_bits(bits);
+                offset += 4;
+
+                Ok((Arc::new(FloatValue::new(name, value)), offset))
+            }
+
+            ValueType::Double => {
+                // Deserialize DoubleValue (type 11)
+                // Format: [type:1][name_len:4][name][value_size:4][value:8]
+                if data.len() < 17 {
+                    return Err(ContainerError::InvalidDataFormat(
+                        "Insufficient data for DoubleValue".to_string()
+                    ));
+                }
+
+                let mut offset = 1;
+
+                let name_len = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                offset += 4;
+
+                let name = String::from_utf8(data[offset..offset + name_len].to_vec())
+                    .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e)))?;
+                offset += name_len;
+
+                offset += 4; // Skip value_size
+
+                let bits = u64::from_le_bytes([
+                    data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+                    data[offset + 4], data[offset + 5], data[offset + 6], data[offset + 7],
+                ]);
+                let value = f64::from_bits(bits);
+                offset += 8;
+
+                Ok((Arc::new(DoubleValue::new(name, value)), offset))
+            }
+
+            ValueType::Bytes => {
+                // Deserialize BytesValue (type 12)
+                // Format: [type:1][name_len:4][name][value_size:4][bytes]
+                if data.len() < 13 {
+                    return Err(ContainerError::InvalidDataFormat(
+                        "Insufficient data for BytesValue".to_string()
+                    ));
+                }
+
+                let mut offset = 1;
+
+                let name_len = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                offset += 4;
+
+                let name = String::from_utf8(data[offset..offset + name_len].to_vec())
+                    .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e)))?;
+                offset += name_len;
+
+                let value_size = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                offset += 4;
+
+                let value = data[offset..offset + value_size].to_vec();
+                offset += value_size;
+
+                Ok((Arc::new(BytesValue::new(name, value)), offset))
             }
 
             ValueType::String => {
