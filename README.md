@@ -53,12 +53,12 @@ Comprehensive documentation organized by use case:
 
 | Metric | Status | Details |
 |--------|--------|---------|
-| **Tests** | ✅ 65/67 passing (97%) | [Details](docs/PRODUCTION_QUALITY.md#test-coverage) |
+| **Tests** | ⚠️ 60/62 passing (96.8%) | [Details](docs/PRODUCTION_QUALITY.md#test-coverage) |
 | **Memory Safety** | ✅ 100% safe Rust | 0 unsafe blocks |
 | **Security** | ✅ 0 vulnerabilities | cargo audit clean |
 | **Production Ready** | ✅ Yes (conditions apply) | [Readiness Report](docs/PRODUCTION_QUALITY.md) |
 
-**Known Issues**: Wire protocol binary compatibility (2 test failures) - use JSON/XML for production.
+**Known Issues**: Wire protocol nested structures (2 test failures) - use JSON/XML for production.
 
 **→ See [PRODUCTION_QUALITY.md](docs/PRODUCTION_QUALITY.md) for complete quality report**
 
