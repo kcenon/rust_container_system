@@ -31,9 +31,9 @@
 
 use super::error::Result;
 use super::value::Value;
+use indexmap::IndexMap;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::Arc;
 
 /// Default maximum number of values per container (prevents memory exhaustion)
@@ -79,7 +79,8 @@ struct ContainerInner {
 
     #[serde(skip)]
     // Improved: Direct Arc references instead of indices for O(1) removal
-    value_map: HashMap<String, Vec<Arc<dyn Value>>>,
+    // Using IndexMap for insertion-order preservation and efficient removal
+    value_map: IndexMap<String, Vec<Arc<dyn Value>>>,
 
     #[serde(skip)]
     /// Maximum number of values allowed in this container
@@ -101,7 +102,7 @@ impl ValueContainer {
                 message_type: "data_container".to_string(),
                 version: "1.0.0.0".to_string(),
                 values: Vec::new(),
-                value_map: HashMap::new(),
+                value_map: IndexMap::new(),
                 max_values: DEFAULT_MAX_VALUES,
             })),
         }
@@ -370,7 +371,7 @@ impl ValueContainer {
         let mut inner = self.inner.write();
 
         // Remove from HashMap - O(1)
-        if let Some(removed_values) = inner.value_map.remove(name) {
+        if let Some(removed_values) = inner.value_map.shift_remove(name) {
             // Build HashSet of pointers to remove - O(m) where m is number of values with this name
             use std::collections::HashSet;
             let removed_ptrs: HashSet<*const dyn Value> = removed_values
@@ -418,7 +419,7 @@ impl ValueContainer {
             let cloned_values: Vec<Arc<dyn Value>> = inner.values.iter().map(|v| v.clone_value()).collect();
 
             // Rebuild value_map from freshly cloned values to avoid sharing Arc refs
-            let mut new_value_map: HashMap<String, Vec<Arc<dyn Value>>> = HashMap::new();
+            let mut new_value_map: IndexMap<String, Vec<Arc<dyn Value>>> = IndexMap::new();
             for value in &cloned_values {
                 let name = value.name().to_string();
                 new_value_map
@@ -447,7 +448,7 @@ impl ValueContainer {
                 message_type: inner.message_type.clone(),
                 version: inner.version.clone(),
                 values: Vec::new(),
-                value_map: HashMap::new(),
+                value_map: IndexMap::new(),
                 max_values: inner.max_values,
             }
         };
@@ -604,6 +605,7 @@ impl ValueContainer {
     }
 
     /// Serialize to bytes (currently uses JSON)
+    #[allow(deprecated)]
     pub fn serialize(&self) -> Result<Vec<u8>> {
         let json = self.to_json()?;
         Ok(json.into_bytes())
