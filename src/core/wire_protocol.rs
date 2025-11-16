@@ -197,8 +197,14 @@ fn serialize_value_cpp(value: &Arc<dyn Value>) -> Result<String> {
         }
         ValueType::Bytes => {
             // Convert bytes to hex string (matching C++ hex encoding)
-            let bytes = value.to_bytes();
-            bytes_to_hex(&bytes)
+            use crate::values::BytesValue;
+            if let Some(bytes_val) = value.as_any().downcast_ref::<BytesValue>() {
+                bytes_to_hex(bytes_val.data())
+            } else {
+                // Fallback to generic to_bytes() if downcast fails
+                let bytes = value.to_bytes();
+                bytes_to_hex(&bytes)
+            }
         }
         ValueType::Container => {
             // For containers, store child count (matching C++ behavior)
@@ -275,7 +281,7 @@ fn bytes_to_hex(bytes: &[u8]) -> String {
 
 /// Convert hex string to bytes
 fn hex_to_bytes(hex: &str) -> Result<Vec<u8>> {
-    if hex.len() % 2 != 0 {
+    if !hex.len().is_multiple_of(2) {
         return Err(ContainerError::InvalidDataFormat(
             "Hex string must have even length".to_string()
         ));
@@ -534,6 +540,8 @@ mod tests {
 
     #[test]
     fn test_bytes_hex_encoding() {
+        use crate::values::BytesValue;
+
         let mut container = ValueContainer::new();
         let test_bytes = vec![0x48, 0x65, 0x6c, 0x6c, 0x6f]; // "Hello"
         container.add_value(Arc::new(BytesValue::new("data", test_bytes.clone()))).unwrap();
@@ -543,6 +551,9 @@ mod tests {
 
         let restored = deserialize_cpp_wire(&wire_data).unwrap();
         let data = restored.get_value("data").unwrap();
-        assert_eq!(data.to_bytes(), test_bytes);
+
+        // Downcast to BytesValue to get raw bytes
+        let bytes_val = data.as_any().downcast_ref::<BytesValue>().unwrap();
+        assert_eq!(bytes_val.data(), &test_bytes[..]);
     }
 }

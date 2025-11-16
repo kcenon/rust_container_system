@@ -23,6 +23,9 @@
 
 # Benchmark results
 /benches/results/
+benchmark_results.txt
+test_results.txt
+clippy_results.txt
 
 # Temporary files
 *.tmp

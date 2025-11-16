@@ -175,7 +175,7 @@ impl ContainerValue {
         self.children
             .iter()
             .filter(|child| child.name() == name)
-            .map(|child| Arc::clone(child))
+            .map(Arc::clone)
             .collect()
     }
 

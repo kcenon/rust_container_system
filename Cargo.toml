@@ -17,6 +17,7 @@ thiserror = "2.0"
 parking_lot = "0.12"
 base64 = "0.22"
 regex = "1.10"
+indexmap = { version = "2.1", features = ["serde"] }
 
 [dev-dependencies]
 criterion = "0.5"
