@@ -185,7 +185,10 @@ pub trait Value: Debug + Send + Sync {
 
     // Meta methods
 
-    /// Clone this value as an Arc<dyn Value>
+    /// Clone this value as an `Arc<dyn Value>`.
+    ///
+    /// Creates a new reference-counted copy of this value that can be
+    /// stored in containers or shared across threads.
     fn clone_value(&self) -> Arc<dyn Value>;
 
     /// Cast to Any for runtime type checking
