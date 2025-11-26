@@ -137,8 +137,9 @@ fn test_ulong_value_rejects_large_value() {
 #[test]
 fn test_long_value_serializes_as_4_bytes() {
     let lv = LongValue::new("test", 12345).expect("Should create value");
-    let bytes = lv.to_bytes();
-    assert_eq!(bytes.len(), 4, "Should serialize as 4 bytes");
+    // to_bytes() returns full binary format: [type][name_len][name][value_size][value_data]
+    // Use size() to verify the value data size
+    assert_eq!(lv.size(), 4, "Value data should be 4 bytes");
 }
 
 #[test]
@@ -302,7 +303,10 @@ fn test_ullong_value_name() {
 fn test_long_value_little_endian_serialization() {
     let lv = LongValue::new("test", 0x12345678).expect("Should create value");
     let bytes = lv.to_bytes();
-    assert_eq!(bytes, vec![0x78, 0x56, 0x34, 0x12], "Should be little-endian");
+    // to_bytes() returns full binary format: [type][name_len][name][value_size][value_data]
+    // For name "test" (4 bytes): 1 + 4 + 4 + 4 = 13 byte header, last 4 bytes are value
+    let value_bytes = &bytes[bytes.len()-4..];
+    assert_eq!(value_bytes, &[0x78, 0x56, 0x34, 0x12], "Should be little-endian");
 }
 
 #[test]
@@ -316,7 +320,9 @@ fn test_ulong_value_little_endian_serialization() {
 fn test_long_value_negative_little_endian() {
     let lv = LongValue::new("test", -1).expect("Should create value");
     let bytes = lv.to_bytes();
-    assert_eq!(bytes, vec![0xFF, 0xFF, 0xFF, 0xFF], "Should be little-endian two's complement");
+    // to_bytes() returns full binary format, extract last 4 bytes for value
+    let value_bytes = &bytes[bytes.len()-4..];
+    assert_eq!(value_bytes, &[0xFF, 0xFF, 0xFF, 0xFF], "Should be little-endian two's complement");
 }
 
 // =============================================================================
