@@ -92,7 +92,8 @@ proptest! {
     #[test]
     fn test_bytes_roundtrip(value in prop::collection::vec(any::<u8>(), 0..1000)) {
         let bytes_val = BytesValue::new("test", value.clone());
-        assert_eq!(bytes_val.to_bytes(), value);
+        // Use data() to get raw bytes (to_bytes() returns serialized format)
+        assert_eq!(bytes_val.data(), &value);
         assert_eq!(bytes_val.name(), "test");
     }
 }

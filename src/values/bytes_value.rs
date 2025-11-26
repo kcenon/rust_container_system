@@ -28,13 +28,100 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 //! Binary data value implementation with Base64 encoding support.
+//!
+//! This module provides [`BytesValue`], a type-safe container for raw binary data.
+//! It implements the [`Value`] trait for seamless integration with the container system.
+//!
+//! # Features
+//!
+//! - Efficient storage of arbitrary binary data
+//! - Base64 encoding for JSON serialization (human-readable, URL-safe)
+//! - Hex encoding for wire protocol (C++ compatible)
+//! - Zero-copy access to underlying data
+//! - Compatible with C++ `bytes_value` (type code 13)
+//!
+//! # Example
+//!
+//! ```rust
+//! use rust_container_system::values::BytesValue;
+//! use rust_container_system::core::Value;
+//!
+//! // Create from vector
+//! let image_header = BytesValue::new("jpeg", vec![0xFF, 0xD8, 0xFF, 0xE0]);
+//!
+//! // Create from slice
+//! let signature = BytesValue::from_slice("sig", &[0xDE, 0xAD, 0xBE, 0xEF]);
+//!
+//! // Access raw data
+//! assert_eq!(signature.data(), &[0xDE, 0xAD, 0xBE, 0xEF]);
+//! assert_eq!(signature.size(), 4);
+//! ```
+//!
+//! # Serialization Formats
+//!
+//! | Format | Encoding | Example |
+//! |--------|----------|---------|
+//! | JSON | Base64 | `{"type":"bytes","value":"3q2+7w=="}` |
+//! | XML | Base64 | `<bytes>3q2+7w==</bytes>` |
+//! | Wire | Hex | `deadbeef` |
+//! | Binary | Raw | `[0xDE, 0xAD, 0xBE, 0xEF]` |
+//!
+//! # Cross-Language Compatibility
+//!
+//! BytesValue uses type code 13 to match C++ `bytes_value`. The wire protocol uses
+//! hexadecimal encoding for compatibility with C++ and other language implementations.
 
 use crate::core::{Result, Value, ValueType};
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 use std::sync::Arc;
 
-/// Binary data value (raw bytes)
+/// Binary data value (raw bytes).
+///
+/// `BytesValue` stores a named collection of raw binary data. Use this type for:
+/// - File contents (images, documents, etc.)
+/// - Cryptographic data (hashes, signatures, keys)
+/// - Protocol buffers or other binary formats
+/// - Any data that isn't valid UTF-8 text
+///
+/// # Type Code
+///
+/// - Wire protocol type: `13` (matches C++ `bytes_value`)
+/// - JSON type tag: `"bytes"`
+/// - JSON encoding: Base64
+/// - XML element: `<bytes>...</bytes>` (Base64 encoded)
+///
+/// # Example
+///
+/// ```rust
+/// use rust_container_system::values::BytesValue;
+/// use rust_container_system::core::Value;
+/// use std::sync::Arc;
+///
+/// // Store binary data
+/// let png_header = vec![0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+/// let image = BytesValue::new("png_magic", png_header);
+///
+/// // Access data
+/// assert_eq!(image.data()[0], 0x89);
+/// assert_eq!(image.size(), 8);
+///
+/// // Use as trait object
+/// let value: Arc<dyn Value> = Arc::new(image);
+/// println!("Size: {} bytes", value.size());
+/// ```
+///
+/// # Binary Format
+///
+/// ```text
+/// [type:1][name_len:4 LE][name:N][value_size:4 LE][raw_bytes:M]
+/// ```
+///
+/// - `type`: 13 (ValueType::Bytes)
+/// - `name_len`: Length of name in bytes (little-endian u32)
+/// - `name`: UTF-8 encoded name
+/// - `value_size`: Length of binary data in bytes (little-endian u32)
+/// - `raw_bytes`: Raw binary content (no encoding)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BytesValue {
     name: String,
@@ -43,7 +130,27 @@ pub struct BytesValue {
 }
 
 impl BytesValue {
-    /// Create a new bytes value
+    /// Create a new bytes value from a vector.
+    ///
+    /// Takes ownership of the provided vector for zero-copy storage.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The identifier/key for this value
+    /// * `data` - The binary data to store (ownership transferred)
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rust_container_system::values::BytesValue;
+    ///
+    /// // From a vector
+    /// let data = vec![0x01, 0x02, 0x03, 0x04];
+    /// let bytes = BytesValue::new("payload", data);
+    ///
+    /// // The vector is moved, not copied
+    /// assert_eq!(bytes.data(), &[0x01, 0x02, 0x03, 0x04]);
+    /// ```
     pub fn new(name: impl Into<String>, data: Vec<u8>) -> Self {
         Self {
             name: name.into(),
@@ -51,7 +158,26 @@ impl BytesValue {
         }
     }
 
-    /// Create from byte slice
+    /// Create a bytes value from a slice (copies data).
+    ///
+    /// Useful when you have a reference to data that needs to be stored.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The identifier/key for this value
+    /// * `data` - The binary data to copy
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rust_container_system::values::BytesValue;
+    ///
+    /// // From a slice (data is copied)
+    /// let original = [0xCA, 0xFE, 0xBA, 0xBE];
+    /// let bytes = BytesValue::from_slice("java_magic", &original);
+    ///
+    /// assert_eq!(bytes.data(), &original);
+    /// ```
     pub fn from_slice(name: impl Into<String>, data: &[u8]) -> Self {
         Self {
             name: name.into(),
@@ -59,7 +185,26 @@ impl BytesValue {
         }
     }
 
-    /// Get byte data as slice
+    /// Get a reference to the raw binary data.
+    ///
+    /// Returns the underlying bytes without any encoding or copying.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rust_container_system::values::BytesValue;
+    ///
+    /// let bytes = BytesValue::new("hash", vec![0xDE, 0xAD, 0xBE, 0xEF]);
+    ///
+    /// // Access individual bytes
+    /// assert_eq!(bytes.data()[0], 0xDE);
+    /// assert_eq!(bytes.data().len(), 4);
+    ///
+    /// // Iterate over bytes
+    /// for byte in bytes.data() {
+    ///     println!("{:02X}", byte);
+    /// }
+    /// ```
     pub fn data(&self) -> &[u8] {
         &self.data
     }

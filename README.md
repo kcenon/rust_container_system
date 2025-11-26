@@ -16,11 +16,17 @@ Comprehensive documentation organized by use case:
 
 | Document | Description | Use When |
 |----------|-------------|----------|
+| **[Quick Start](docs/guides/QUICK_START.md)** | Get started in 5 minutes | First-time users |
+| **[API Reference](docs/API_REFERENCE.md)** | Complete API documentation | Looking up methods |
 | **[FEATURES.md](docs/FEATURES.md)** | Complete feature guide with examples | Learning all capabilities |
+| **[Best Practices](docs/guides/BEST_PRACTICES.md)** | Recommended usage patterns | Writing production code |
+| **[FAQ](docs/guides/FAQ.md)** | Frequently asked questions | Quick answers |
+| **[Troubleshooting](docs/guides/TROUBLESHOOTING.md)** | Common issues and solutions | Fixing problems |
 | **[BENCHMARKS.md](docs/BENCHMARKS.md)** | Detailed performance analysis | Optimizing performance |
-| **[BASELINE.md](docs/performance/BASELINE.md)** | Performance baseline metrics | Tracking regressions |
 | **[PRODUCTION_QUALITY.md](docs/PRODUCTION_QUALITY.md)** | Quality & readiness report | Production deployment |
 | **[examples/](examples/)** | Working code examples | Getting started quickly |
+
+**→ See [docs/README.md](docs/README.md) for the complete documentation hub**
 
 ## Features Overview
 
@@ -218,15 +224,32 @@ cargo doc --open
 
 ```
 docs/
-├── FEATURES.md              # Complete feature guide
-├── BENCHMARKS.md            # Performance analysis
-├── PRODUCTION_QUALITY.md    # Quality & readiness
+├── README.md                    # Documentation hub
+├── API_REFERENCE.md             # Complete API reference
+├── FEATURES.md                  # Complete feature guide
+├── BENCHMARKS.md                # Performance analysis
+├── PRODUCTION_QUALITY.md        # Quality & readiness
+├── PROJECT_STRUCTURE.md         # Codebase organization
+├── ARRAY_VALUE_GUIDE.md         # Array value guide
+│
+├── guides/                      # User guides
+│   ├── QUICK_START.md          # 5-minute quick start
+│   ├── FAQ.md                  # Frequently asked questions
+│   ├── TROUBLESHOOTING.md      # Common issues and solutions
+│   └── BEST_PRACTICES.md       # Recommended patterns
+│
+├── contributing/                # Contributor guides
+│   └── TESTING.md              # Testing strategy
+│
 └── performance/
-    └── BASELINE.md          # Baseline metrics
+    └── BASELINE.md              # Baseline metrics
 ```
 
 ### Contributing
 
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+**Quick Start**:
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Run tests (`cargo test`)
@@ -238,6 +261,9 @@ docs/
 - No clippy warnings
 - Formatted with rustfmt
 - Benchmarks within 30% of baseline
+
+**→ See [CONTRIBUTING.md](CONTRIBUTING.md) for complete contribution guide**
+**→ See [Testing Guide](docs/contributing/TESTING.md) for testing requirements**
 
 ## License
 

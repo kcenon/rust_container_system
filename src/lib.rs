@@ -72,7 +72,8 @@ pub mod values;
 /// ```
 pub mod prelude {
     pub use crate::core::{ContainerError, Result, Value, ValueContainer, ValueContainerBuilder, ValueIter, ValueType};
-    pub use crate::values::{BoolValue, BytesValue, ContainerValue, DoubleValue, FloatValue, IntValue, LLongValue, LongValue, ShortValue, StringValue, UIntValue, ULLongValue, ULongValue, UShortValue};
+    pub use crate::core::json_v2_adapter::{JsonV2Adapter, SerializationFormat};
+    pub use crate::values::{ArrayValue, BoolValue, BytesValue, ContainerValue, DoubleValue, FloatValue, IntValue, LLongValue, LongValue, ShortValue, StringValue, UIntValue, ULLongValue, ULongValue, UShortValue};
 }
 
 /// Re-export core types at root level

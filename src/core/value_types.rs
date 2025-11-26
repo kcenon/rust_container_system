@@ -63,10 +63,10 @@ pub enum ValueType {
     Float = 10,
     /// 64-bit floating point
     Double = 11,
-    /// Raw byte array (binary data)
-    Bytes = 12,
-    /// UTF-8 encoded string
-    String = 13,
+    /// UTF-8 encoded string (matches C++ string_value = 12)
+    String = 12,
+    /// Raw byte array (binary data, matches C++ bytes_value = 13)
+    Bytes = 13,
     /// Nested container
     Container = 14,
     /// Array/list of values
@@ -97,8 +97,8 @@ impl ValueType {
             "9" => Some(ValueType::ULLong),
             "10" => Some(ValueType::Float),
             "11" => Some(ValueType::Double),
-            "12" => Some(ValueType::Bytes),
-            "13" => Some(ValueType::String),
+            "12" => Some(ValueType::String),
+            "13" => Some(ValueType::Bytes),
             "14" => Some(ValueType::Container),
             "15" => Some(ValueType::Array),
             _ => None,
@@ -112,7 +112,7 @@ impl ValueType {
     /// use rust_container_system::ValueType;
     ///
     /// assert_eq!(ValueType::Int.to_str(), "4");
-    /// assert_eq!(ValueType::String.to_str(), "13");
+    /// assert_eq!(ValueType::String.to_str(), "12");  // String = 12 (matches C++)
     /// ```
     pub fn to_str(&self) -> &'static str {
         match self {
@@ -128,8 +128,8 @@ impl ValueType {
             ValueType::ULLong => "9",
             ValueType::Float => "10",
             ValueType::Double => "11",
-            ValueType::Bytes => "12",
-            ValueType::String => "13",
+            ValueType::String => "12",
+            ValueType::Bytes => "13",
             ValueType::Container => "14",
             ValueType::Array => "15",
         }
@@ -244,8 +244,8 @@ impl fmt::Display for ValueType {
                 ValueType::ULLong => "ullong_value",
                 ValueType::Float => "float_value",
                 ValueType::Double => "double_value",
-                ValueType::Bytes => "bytes_value",
                 ValueType::String => "string_value",
+                ValueType::Bytes => "bytes_value",
                 ValueType::Container => "container_value",
                 ValueType::Array => "array_value",
             }
