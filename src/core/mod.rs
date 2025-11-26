@@ -65,6 +65,9 @@ pub mod container;
 /// C++ wire protocol implementation for cross-language compatibility
 pub mod wire_protocol;
 
+/// JSON v2.0 adapter for cross-language compatibility
+pub mod json_v2_adapter;
+
 /// Re-export error types
 ///
 /// ```rust
@@ -99,8 +102,8 @@ pub use value::{BaseValue, Value};
 ///
 /// let vtype = ValueType::String;
 /// assert!(vtype.is_numeric() == false);
-/// // to_str() returns the numeric string representation
-/// assert_eq!(vtype.to_str(), "13");
+/// // to_str() returns the numeric string representation (matches C++ string_value = 12)
+/// assert_eq!(vtype.to_str(), "12");
 /// ```
 pub use value_types::ValueType;
 
