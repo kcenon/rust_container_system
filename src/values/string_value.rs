@@ -28,13 +28,85 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 //! UTF-8 string value implementation.
+//!
+//! This module provides [`StringValue`], a type-safe container for UTF-8 encoded
+//! string data. It implements the [`Value`] trait for seamless integration with
+//! the container system.
+//!
+//! # Features
+//!
+//! - Full UTF-8 support including multi-byte characters (CJK, emoji, etc.)
+//! - Efficient serialization to JSON, XML, and binary wire protocol
+//! - Zero-copy access to underlying string data
+//! - Compatible with C++ `string_value` (type code 12)
+//!
+//! # Example
+//!
+//! ```rust
+//! use rust_container_system::values::StringValue;
+//! use rust_container_system::core::Value;
+//!
+//! // Create a string value
+//! let greeting = StringValue::new("message", "Hello, 世界! 🌍");
+//!
+//! // Access properties
+//! assert_eq!(greeting.name(), "message");
+//! assert_eq!(greeting.value(), "Hello, 世界! 🌍");
+//! assert_eq!(greeting.size(), 19); // Byte length, not character count
+//! ```
+//!
+//! # Cross-Language Compatibility
+//!
+//! StringValue uses type code 12 to match C++ `string_value`. Binary serialization
+//! uses UTF-8 encoding with little-endian length prefixes for cross-platform compatibility.
 
 use crate::core::{Result, Value, ValueType};
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 use std::sync::Arc;
 
-/// UTF-8 encoded string value
+/// UTF-8 encoded string value.
+///
+/// `StringValue` stores a named string value with full UTF-8 support.
+/// It is the standard type for text data in the container system.
+///
+/// # Type Code
+///
+/// - Wire protocol type: `12` (matches C++ `string_value`)
+/// - JSON type tag: `"string"`
+/// - XML element: `<string>...</string>`
+///
+/// # Example
+///
+/// ```rust
+/// use rust_container_system::values::StringValue;
+/// use rust_container_system::core::Value;
+/// use std::sync::Arc;
+///
+/// // Basic usage
+/// let name = StringValue::new("username", "alice");
+/// assert_eq!(name.to_string(), "alice");
+///
+/// // UTF-8 support
+/// let korean = StringValue::new("greeting", "안녕하세요");
+/// assert_eq!(korean.value(), "안녕하세요");
+///
+/// // Use as trait object
+/// let value: Arc<dyn Value> = Arc::new(StringValue::new("key", "value"));
+/// println!("Type: {:?}", value.value_type());
+/// ```
+///
+/// # Binary Format
+///
+/// ```text
+/// [type:1][name_len:4 LE][name:N][value_size:4 LE][utf8_bytes:M]
+/// ```
+///
+/// - `type`: 12 (ValueType::String)
+/// - `name_len`: Length of name in bytes (little-endian u32)
+/// - `name`: UTF-8 encoded name
+/// - `value_size`: Length of string value in bytes (little-endian u32)
+/// - `utf8_bytes`: UTF-8 encoded string content
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StringValue {
     name: String,
@@ -42,7 +114,27 @@ pub struct StringValue {
 }
 
 impl StringValue {
-    /// Create a new string value
+    /// Create a new string value.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The identifier/key for this value (any type implementing `Into<String>`)
+    /// * `value` - The string content (any type implementing `Into<String>`)
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rust_container_system::values::StringValue;
+    ///
+    /// // From &str
+    /// let s1 = StringValue::new("key", "value");
+    ///
+    /// // From String
+    /// let s2 = StringValue::new(String::from("name"), String::from("Alice"));
+    ///
+    /// // Mixed types
+    /// let s3 = StringValue::new("config", format!("value_{}", 42));
+    /// ```
     pub fn new(name: impl Into<String>, value: impl Into<String>) -> Self {
         Self {
             name: name.into(),
@@ -50,7 +142,22 @@ impl StringValue {
         }
     }
 
-    /// Get string value as &str
+    /// Get the string value as a reference.
+    ///
+    /// Returns a reference to the underlying string data without copying.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rust_container_system::values::StringValue;
+    ///
+    /// let s = StringValue::new("greeting", "Hello, World!");
+    /// assert_eq!(s.value(), "Hello, World!");
+    ///
+    /// // Use with string operations
+    /// assert!(s.value().contains("World"));
+    /// assert_eq!(s.value().len(), 13);
+    /// ```
     pub fn value(&self) -> &str {
         &self.value
     }

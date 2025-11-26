@@ -98,6 +98,7 @@ impl ContainerValue {
     /// # Example
     /// ```
     /// use rust_container_system::values::{ContainerValue, IntValue, StringValue};
+    /// use std::sync::Arc;
     ///
     /// let child = Arc::new(IntValue::new("num", 42));
     /// let container = ContainerValue::new("data", vec![child]);
@@ -117,6 +118,7 @@ impl ContainerValue {
     /// # Example
     /// ```
     /// use rust_container_system::values::{ContainerValue, IntValue, StringValue};
+    /// use std::sync::Arc;
     ///
     /// let mut container = ContainerValue::new("data", vec![]);
     /// container.add_child(Arc::new(IntValue::new("id", 123)));
@@ -133,6 +135,7 @@ impl ContainerValue {
     /// # Example
     /// ```
     /// use rust_container_system::values::{ContainerValue, IntValue, StringValue};
+    /// use std::sync::Arc;
     ///
     /// let child1 = Arc::new(IntValue::new("value", 1));
     /// let child2 = Arc::new(IntValue::new("value", 2));
@@ -162,6 +165,7 @@ impl ContainerValue {
     /// # Example
     /// ```
     /// use rust_container_system::values::{ContainerValue, IntValue, StringValue};
+    /// use std::sync::Arc;
     ///
     /// let child1 = Arc::new(IntValue::new("tag", 1));
     /// let child2 = Arc::new(IntValue::new("tag", 2));
@@ -186,6 +190,7 @@ impl ContainerValue {
     /// # Example
     /// ```
     /// use rust_container_system::values::{ContainerValue, IntValue, StringValue};
+    /// use std::sync::Arc;
     ///
     /// let child1 = Arc::new(IntValue::new("temp", 1));
     /// let child2 = Arc::new(IntValue::new("keep", 2));
@@ -206,6 +211,7 @@ impl ContainerValue {
     /// # Example
     /// ```
     /// use rust_container_system::values::{ContainerValue, IntValue, StringValue};
+    /// use std::sync::Arc;
     ///
     /// let child = Arc::new(IntValue::new("data", 42));
     /// let mut container = ContainerValue::new("test", vec![child]);

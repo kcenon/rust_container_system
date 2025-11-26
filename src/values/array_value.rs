@@ -392,8 +392,8 @@ impl ArrayValue {
             9 => ValueType::ULLong,
             10 => ValueType::Float,
             11 => ValueType::Double,
-            12 => ValueType::Bytes,
-            13 => ValueType::String,
+            12 => ValueType::String,  // Matches C++ string_value = 12
+            13 => ValueType::Bytes,   // Matches C++ bytes_value = 13
             14 => ValueType::Container,
             15 => ValueType::Array,
             _ => {

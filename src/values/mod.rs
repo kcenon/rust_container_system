@@ -63,7 +63,7 @@ pub mod array_value;
 /// let values: Vec<Arc<dyn Value>> = vec![
 ///     Arc::new(BoolValue::new("flag", true)),
 ///     Arc::new(IntValue::new("count", 10)),
-///     Arc::new(LongValue::new("big_num", 1_000_000)),
+///     Arc::new(LongValue::new("big_num", 1_000_000).unwrap()),  // Returns Result
 ///     Arc::new(DoubleValue::new("ratio", 3.14)),
 /// ];
 /// ```
