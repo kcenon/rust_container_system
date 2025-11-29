@@ -38,6 +38,9 @@
 //! - `bytes_value`: Binary data implementation
 //! - `container_value`: Nested container implementation
 
+/// Null value implementation
+pub mod null_value;
+
 /// Primitive type implementations (Bool, Short, UShort, Int, UInt, Long, ULong, Float, Double)
 pub mod primitive_values;
 
@@ -52,6 +55,18 @@ pub mod container_value;
 
 /// Array value implementation (arrays/lists)
 pub mod array_value;
+
+/// Re-export null type
+///
+/// ```rust
+/// use rust_container_system::values::NullValue;
+/// use rust_container_system::core::Value;
+///
+/// let null_val = NullValue::new("optional_field");
+/// assert!(null_val.is_null());
+/// assert_eq!(null_val.size(), 0);
+/// ```
+pub use null_value::NullValue;
 
 /// Re-export primitive types
 ///
