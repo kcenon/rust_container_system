@@ -408,21 +408,20 @@ impl JsonV2Adapter {
         }
 
         // Check for C++ format (has "header" object)
-        if json_data.get("header").is_some() {
-            if json_data
+        if json_data.get("header").is_some()
+            && json_data
                 .get("values")
                 .and_then(|v| v.as_object())
                 .is_some()
-            {
-                return SerializationFormat::CppJson;
-            }
+        {
+            return SerializationFormat::CppJson;
         }
 
         // Check for Python/.NET format (flat with values array)
-        if json_data.get("message_type").is_some() {
-            if json_data.get("values").and_then(|v| v.as_array()).is_some() {
-                return SerializationFormat::PythonJson;
-            }
+        if json_data.get("message_type").is_some()
+            && json_data.get("values").and_then(|v| v.as_array()).is_some()
+        {
+            return SerializationFormat::PythonJson;
         }
 
         SerializationFormat::Unknown
@@ -608,7 +607,7 @@ impl JsonV2Adapter {
                     let children: Vec<JsonValue> = container_val
                         .children()
                         .iter()
-                        .map(|child| Self::value_to_v2_dict(child))
+                        .map(Self::value_to_v2_dict)
                         .collect();
                     obj.insert("data".to_string(), json!(children));
                     obj.insert(
@@ -626,7 +625,7 @@ impl JsonV2Adapter {
                     let elements: Vec<JsonValue> = array_val
                         .elements()
                         .iter()
-                        .map(|elem| Self::value_to_v2_dict(elem))
+                        .map(Self::value_to_v2_dict)
                         .collect();
                     obj.insert("data".to_string(), json!(elements));
                     obj.insert("element_count".to_string(), json!(array_val.count()));
@@ -862,7 +861,7 @@ impl JsonV2Adapter {
                     "false".to_string()
                 }
             }
-            ValueType::Bytes => BASE64.encode(&value.to_bytes()),
+            ValueType::Bytes => BASE64.encode(value.to_bytes()),
             _ => value.to_string(),
         }
     }

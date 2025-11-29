@@ -73,7 +73,7 @@ fn test_deserialize_cpp_data() {
     let active = container
         .get_value("active")
         .expect("Missing 'active' value");
-    assert_eq!(active.to_bool().unwrap(), true);
+    assert!(active.to_bool().unwrap());
 
     // Verify double value
     let balance = container
@@ -110,7 +110,7 @@ fn test_deserialize_python_data() {
     let verified = container
         .get_value("verified")
         .expect("Missing 'verified' value");
-    assert_eq!(verified.to_bool().unwrap(), true);
+    assert!(verified.to_bool().unwrap());
 }
 
 #[test]
@@ -222,6 +222,7 @@ fn test_bytes_interop() {
 }
 
 #[test]
+#[allow(clippy::approx_constant)]
 fn test_numeric_types_interop() {
     // Test core numeric types for cross-language compatibility
     // Note: Short/UShort/UInt/ULong support requires additional Value trait work

@@ -38,6 +38,7 @@ use std::sync::Arc;
 
 /// Generate binary data for testing cross-language compatibility
 #[test]
+#[allow(clippy::approx_constant)]
 fn test_generate_rust_binary_data() {
     // Generate binary representations for various types
     // These hex strings can be used in Go/C++ tests

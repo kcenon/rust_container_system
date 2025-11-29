@@ -530,7 +530,7 @@ mod tests {
         assert_eq!(x.to_int().unwrap(), 100);
 
         let flag = restored.get_value("flag").unwrap();
-        assert_eq!(flag.to_bool().unwrap(), true);
+        assert!(flag.to_bool().unwrap());
     }
 
     #[test]

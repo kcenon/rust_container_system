@@ -93,7 +93,7 @@ fn producer_consumer_example() {
     let producer = thread::spawn(move || {
         for i in 0..5 {
             let mut container = ValueContainer::new();
-            container.set_source("producer", &format!("batch_{}", i));
+            container.set_source("producer", format!("batch_{}", i));
             container.set_message_type("data_packet");
 
             // Add values
