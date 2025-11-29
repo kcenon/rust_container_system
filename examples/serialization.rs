@@ -33,6 +33,8 @@
 //!
 //! Run with: cargo run --example serialization
 
+#![allow(deprecated)]
+
 use rust_container_system::prelude::*;
 use std::sync::Arc;
 

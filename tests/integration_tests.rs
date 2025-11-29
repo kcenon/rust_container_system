@@ -96,6 +96,7 @@ fn test_value_limit_enforcement() {
 }
 
 #[test]
+#[allow(deprecated)]
 fn test_xml_injection_prevention() {
     let mut container = ValueContainer::new();
 
@@ -123,6 +124,7 @@ fn test_xml_injection_prevention() {
 }
 
 #[test]
+#[allow(deprecated)]
 fn test_json_serialization() {
     let mut container = ValueContainer::new();
     container.set_source("server", "main");
@@ -392,6 +394,7 @@ fn test_serialization_round_trip() {
 }
 
 #[test]
+#[allow(deprecated)]
 fn test_empty_container_serialization() {
     let container = ValueContainer::new();
 

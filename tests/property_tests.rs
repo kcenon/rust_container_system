@@ -202,6 +202,7 @@ proptest! {
 // Serialization Tests
 // ============================================================================
 
+#[allow(deprecated)]
 proptest! {
     /// Test that JSON serialization doesn't panic on various inputs
     #[test]

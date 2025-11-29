@@ -514,6 +514,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_json_serialization() {
         let child1 = Arc::new(IntValue::new("id", 123));
         let child2 = Arc::new(StringValue::new("name", "Bob"));
@@ -526,6 +527,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_xml_serialization() {
         let child = Arc::new(IntValue::new("value", 42));
         let container = ContainerValue::new("data", vec![child]);

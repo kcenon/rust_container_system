@@ -1135,6 +1135,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_xml_escape() {
         // Test XML injection prevention
         let mut container = ValueContainer::new();
@@ -1151,6 +1152,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_xml_special_chars() {
         let mut container = ValueContainer::new();
         container
@@ -1295,6 +1297,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_deserialization_basic() {
         // Create original container
         let mut original = ValueContainer::new();
@@ -1332,6 +1335,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_deserialization_all_types() {
         // Create container with all value types
         let mut original = ValueContainer::new();
@@ -1398,6 +1402,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_deserialization_bytes_base64() {
         // Test that bytes are properly encoded/decoded as base64
         let mut original = ValueContainer::new();
@@ -1418,6 +1423,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_deserialization_empty_container() {
         let original = ValueContainer::new();
         let json = original.to_json().unwrap();
@@ -1539,6 +1545,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_deserialization_multiple_values_same_name() {
         // Create container with multiple values with same name
         let mut original = ValueContainer::new();

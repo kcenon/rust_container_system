@@ -110,6 +110,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_container_serialization() {
         let mut container = ValueContainer::new();
         container.set_source("source1", "sub1");

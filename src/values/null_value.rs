@@ -231,6 +231,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_null_value_to_json() {
         let null_val = NullValue::new("test");
         let json = null_val.to_json().unwrap();
@@ -239,6 +240,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_null_value_to_xml() {
         let null_val = NullValue::new("test");
         let xml = null_val.to_xml().unwrap();

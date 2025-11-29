@@ -167,6 +167,7 @@ fn bench_container_get_value(c: &mut Criterion) {
 // Serialization Benchmarks
 // ============================================================================
 
+#[allow(deprecated)]
 fn bench_json_serialization(c: &mut Criterion) {
     let mut group = c.benchmark_group("json_serialization");
 
@@ -205,6 +206,7 @@ fn bench_json_serialization(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(deprecated)]
 fn bench_xml_serialization(c: &mut Criterion) {
     let mut group = c.benchmark_group("xml_serialization");
 

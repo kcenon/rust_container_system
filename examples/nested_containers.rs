@@ -29,6 +29,8 @@
 
 //! Example demonstrating nested containers (ContainerValue)
 
+#![allow(deprecated)]
+
 use rust_container_system::prelude::*;
 use std::sync::Arc;
 
