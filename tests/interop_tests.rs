@@ -70,11 +70,15 @@ fn test_deserialize_cpp_data() {
     assert_eq!(name.to_string(), "TestUser");
 
     // Verify bool value
-    let active = container.get_value("active").expect("Missing 'active' value");
-    assert_eq!(active.to_bool().unwrap(), true);
+    let active = container
+        .get_value("active")
+        .expect("Missing 'active' value");
+    assert!(active.to_bool().unwrap());
 
     // Verify double value
-    let balance = container.get_value("balance").expect("Missing 'balance' value");
+    let balance = container
+        .get_value("balance")
+        .expect("Missing 'balance' value");
     assert!((balance.to_double().unwrap() - 1500.75).abs() < 0.001);
 }
 
@@ -95,14 +99,18 @@ fn test_deserialize_python_data() {
     assert_eq!(container.value_count(), 3);
 
     // Verify values
-    let user_id = container.get_value("user_id").expect("Missing 'user_id' value");
+    let user_id = container
+        .get_value("user_id")
+        .expect("Missing 'user_id' value");
     assert_eq!(user_id.to_int().unwrap(), 12345);
 
     let email = container.get_value("email").expect("Missing 'email' value");
     assert_eq!(email.to_string(), "test@example.com");
 
-    let verified = container.get_value("verified").expect("Missing 'verified' value");
-    assert_eq!(verified.to_bool().unwrap(), true);
+    let verified = container
+        .get_value("verified")
+        .expect("Missing 'verified' value");
+    assert!(verified.to_bool().unwrap());
 }
 
 #[test]
@@ -113,12 +121,20 @@ fn test_rust_to_cpp_format() {
     container.set_target("cpp_server", "worker");
     container.set_message_type("data_sync");
 
-    container.add_value(Arc::new(IntValue::new("sequence", 100))).unwrap();
-    container.add_value(Arc::new(StringValue::new("payload", "hello_cpp"))).unwrap();
-    container.add_value(Arc::new(BoolValue::new("compressed", false))).unwrap();
+    container
+        .add_value(Arc::new(IntValue::new("sequence", 100)))
+        .unwrap();
+    container
+        .add_value(Arc::new(StringValue::new("payload", "hello_cpp")))
+        .unwrap();
+    container
+        .add_value(Arc::new(BoolValue::new("compressed", false)))
+        .unwrap();
 
     // Serialize to wire format
-    let wire_data = container.serialize_cpp_wire().expect("Serialization failed");
+    let wire_data = container
+        .serialize_cpp_wire()
+        .expect("Serialization failed");
 
     // Verify format matches C++ expectations
     assert!(wire_data.starts_with("@header={{"));
@@ -133,8 +149,8 @@ fn test_rust_to_cpp_format() {
     assert!(wire_data.contains("[compressed,bool_value,false]"));
 
     // Verify can be deserialized back
-    let restored = ValueContainer::deserialize_cpp_wire(&wire_data)
-        .expect("Failed to deserialize own data");
+    let restored =
+        ValueContainer::deserialize_cpp_wire(&wire_data).expect("Failed to deserialize own data");
     assert_eq!(restored.source_id(), "rust_client");
     assert_eq!(restored.value_count(), 3);
 }
@@ -147,12 +163,20 @@ fn test_rust_to_python_format() {
     container.set_target("python_analyzer", "ml_model");
     container.set_message_type("training_data");
 
-    container.add_value(Arc::new(IntValue::new("epoch", 5))).unwrap();
-    container.add_value(Arc::new(DoubleValue::new("loss", 0.0234))).unwrap();
-    container.add_value(Arc::new(StringValue::new("model", "transformer"))).unwrap();
+    container
+        .add_value(Arc::new(IntValue::new("epoch", 5)))
+        .unwrap();
+    container
+        .add_value(Arc::new(DoubleValue::new("loss", 0.0234)))
+        .unwrap();
+    container
+        .add_value(Arc::new(StringValue::new("model", "transformer")))
+        .unwrap();
 
     // Serialize to wire format (compatible with Python)
-    let wire_data = container.serialize_cpp_wire().expect("Serialization failed");
+    let wire_data = container
+        .serialize_cpp_wire()
+        .expect("Serialization failed");
 
     // Python should be able to parse this exactly
     assert!(wire_data.contains("[epoch,int_value,5]"));
@@ -177,7 +201,9 @@ fn test_bytes_interop() {
     container.set_message_type("binary_transfer");
 
     let test_bytes = vec![0xDE, 0xAD, 0xBE, 0xEF, 0xCA, 0xFE];
-    container.add_value(Arc::new(BytesValue::new("signature", test_bytes.clone()))).unwrap();
+    container
+        .add_value(Arc::new(BytesValue::new("signature", test_bytes.clone())))
+        .unwrap();
 
     let wire_data = container.serialize_cpp_wire().unwrap();
 
@@ -196,6 +222,7 @@ fn test_bytes_interop() {
 }
 
 #[test]
+#[allow(clippy::approx_constant)]
 fn test_numeric_types_interop() {
     // Test core numeric types for cross-language compatibility
     // Note: Short/UShort/UInt/ULong support requires additional Value trait work
@@ -203,10 +230,18 @@ fn test_numeric_types_interop() {
     container.set_message_type("numeric_test");
 
     // Test working types: Int, Long, Float, Double
-    container.add_value(Arc::new(IntValue::new("i32", -123456))).unwrap();
-    container.add_value(Arc::new(LLongValue::new("i64", -9876543210))).unwrap();
-    container.add_value(Arc::new(FloatValue::new("f32", 3.14159))).unwrap();
-    container.add_value(Arc::new(DoubleValue::new("f64", 2.71828182845))).unwrap();
+    container
+        .add_value(Arc::new(IntValue::new("i32", -123456)))
+        .unwrap();
+    container
+        .add_value(Arc::new(LLongValue::new("i64", -9876543210)))
+        .unwrap();
+    container
+        .add_value(Arc::new(FloatValue::new("f32", 3.14159)))
+        .unwrap();
+    container
+        .add_value(Arc::new(DoubleValue::new("f64", 2.71828182845)))
+        .unwrap();
 
     let wire_data = container.serialize_cpp_wire().unwrap();
 
@@ -221,10 +256,19 @@ fn test_numeric_types_interop() {
     assert_eq!(restored.value_count(), 4);
 
     // Verify values
-    assert_eq!(restored.get_value("i32").unwrap().to_int().unwrap(), -123456);
-    assert_eq!(restored.get_value("i64").unwrap().to_long().unwrap(), -9876543210);
+    assert_eq!(
+        restored.get_value("i32").unwrap().to_int().unwrap(),
+        -123456
+    );
+    assert_eq!(
+        restored.get_value("i64").unwrap().to_long().unwrap(),
+        -9876543210
+    );
     assert!((restored.get_value("f32").unwrap().to_float().unwrap() - 3.14159).abs() < 0.0001);
-    assert!((restored.get_value("f64").unwrap().to_double().unwrap() - 2.71828182845).abs() < 0.00000001);
+    assert!(
+        (restored.get_value("f64").unwrap().to_double().unwrap() - 2.71828182845).abs()
+            < 0.00000001
+    );
 }
 
 // TODO: Add full numeric type support (Short, UShort, UInt, ULong, LLong, ULLong)
@@ -257,15 +301,27 @@ fn test_special_characters_in_strings() {
     let mut container = ValueContainer::new();
     container.set_message_type("special_chars");
 
-    container.add_value(Arc::new(StringValue::new("text", "Hello, World!"))).unwrap();
-    container.add_value(Arc::new(StringValue::new("path", "/usr/local/bin"))).unwrap();
-    container.add_value(Arc::new(StringValue::new("expr", "a=b+c"))).unwrap();
+    container
+        .add_value(Arc::new(StringValue::new("text", "Hello, World!")))
+        .unwrap();
+    container
+        .add_value(Arc::new(StringValue::new("path", "/usr/local/bin")))
+        .unwrap();
+    container
+        .add_value(Arc::new(StringValue::new("expr", "a=b+c")))
+        .unwrap();
 
     let wire_data = container.serialize_cpp_wire().unwrap();
 
     // Roundtrip
     let restored = ValueContainer::deserialize_cpp_wire(&wire_data).unwrap();
-    assert_eq!(restored.get_value("text").unwrap().to_string(), "Hello, World!");
-    assert_eq!(restored.get_value("path").unwrap().to_string(), "/usr/local/bin");
+    assert_eq!(
+        restored.get_value("text").unwrap().to_string(),
+        "Hello, World!"
+    );
+    assert_eq!(
+        restored.get_value("path").unwrap().to_string(),
+        "/usr/local/bin"
+    );
     assert_eq!(restored.get_value("expr").unwrap().to_string(), "a=b+c");
 }

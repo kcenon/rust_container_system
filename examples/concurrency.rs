@@ -93,7 +93,7 @@ fn producer_consumer_example() {
     let producer = thread::spawn(move || {
         for i in 0..5 {
             let mut container = ValueContainer::new();
-            container.set_source("producer", &format!("batch_{}", i));
+            container.set_source("producer", format!("batch_{}", i));
             container.set_message_type("data_packet");
 
             // Add values
@@ -128,10 +128,7 @@ fn producer_consumer_example() {
                 .map(|v| v.to_string())
                 .unwrap_or_default();
 
-            println!(
-                "  Consumer: received packet {} with data '{}'",
-                seq, data
-            );
+            println!("  Consumer: received packet {} with data '{}'", seq, data);
             count += 1;
         }
         println!("  Consumer: processed {} packets total", count);

@@ -29,6 +29,8 @@
 
 //! Property-based tests using proptest
 
+#![allow(deprecated)]
+
 use proptest::prelude::*;
 use rust_container_system::prelude::*;
 use std::sync::Arc;

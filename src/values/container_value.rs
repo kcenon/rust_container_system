@@ -319,7 +319,11 @@ impl Value for ContainerValue {
     }
 
     fn to_string(&self) -> String {
-        format!("[Container '{}' with {} children]", self.name, self.children.len())
+        format!(
+            "[Container '{}' with {} children]",
+            self.name,
+            self.children.len()
+        )
     }
 
     fn to_bytes(&self) -> Vec<u8> {
@@ -353,7 +357,10 @@ impl Value for ContainerValue {
         let mut xml = String::from("<container_value>\n");
         xml.push_str(&format!("  <name>{}</name>\n", self.name));
         xml.push_str(&format!("  <type>{}</type>\n", self.value_type()));
-        xml.push_str(&format!("  <child_count>{}</child_count>\n", self.children.len()));
+        xml.push_str(&format!(
+            "  <child_count>{}</child_count>\n",
+            self.children.len()
+        ));
         xml.push_str("  <children>\n");
 
         for child in &self.children {
@@ -507,6 +514,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_json_serialization() {
         let child1 = Arc::new(IntValue::new("id", 123));
         let child2 = Arc::new(StringValue::new("name", "Bob"));
@@ -519,6 +527,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_xml_serialization() {
         let child = Arc::new(IntValue::new("value", 42));
         let container = ContainerValue::new("data", vec![child]);

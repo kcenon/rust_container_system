@@ -30,7 +30,7 @@
 //! Binary data value implementation with Base64 encoding support.
 //!
 //! This module provides [`BytesValue`], a type-safe container for raw binary data.
-//! It implements the [`Value`] trait for seamless integration with the container system.
+//! It implements the [`crate::core::Value`] trait for seamless integration with the container system.
 //!
 //! # Features
 //!
@@ -266,7 +266,10 @@ impl Value for BytesValue {
 
     /// Serialize to XML using Base64 encoding
     fn to_xml(&self) -> Result<String> {
-        Ok(format!("<bytes>{}</bytes>", crate::core::xml_escape(&base64_encode(&self.data)?)))
+        Ok(format!(
+            "<bytes>{}</bytes>",
+            crate::core::xml_escape(&base64_encode(&self.data)?)
+        ))
     }
 
     fn clone_value(&self) -> Arc<dyn Value> {

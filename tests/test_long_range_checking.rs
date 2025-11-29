@@ -174,19 +174,31 @@ fn test_long_value_returns_correct_type() {
 #[test]
 fn test_ulong_value_returns_correct_type() {
     let ulv = ULongValue::new("test", 12345).expect("Should create value");
-    assert_eq!(ulv.value_type(), ValueType::ULong, "Should be type ULong (7)");
+    assert_eq!(
+        ulv.value_type(),
+        ValueType::ULong,
+        "Should be type ULong (7)"
+    );
 }
 
 #[test]
 fn test_llong_value_returns_correct_type() {
     let llv = LLongValue::new("test", 5_000_000_000);
-    assert_eq!(llv.value_type(), ValueType::LLong, "Should be type LLong (8)");
+    assert_eq!(
+        llv.value_type(),
+        ValueType::LLong,
+        "Should be type LLong (8)"
+    );
 }
 
 #[test]
 fn test_ullong_value_returns_correct_type() {
     let ullv = ULLongValue::new("test", 10_000_000_000);
-    assert_eq!(ullv.value_type(), ValueType::ULLong, "Should be type ULLong (9)");
+    assert_eq!(
+        ullv.value_type(),
+        ValueType::ULLong,
+        "Should be type ULLong (9)"
+    );
 }
 
 // =============================================================================
@@ -199,8 +211,11 @@ fn test_long_value_error_message_is_descriptive() {
     assert!(result.is_err(), "Should fail");
     let err_msg = format!("{:?}", result.unwrap_err());
     // Check that error contains type information
-    assert!(err_msg.contains("i32") || err_msg.contains("long_value") || err_msg.contains("type 6"),
-        "Error should mention target type: {}", err_msg);
+    assert!(
+        err_msg.contains("i32") || err_msg.contains("long_value") || err_msg.contains("type 6"),
+        "Error should mention target type: {}",
+        err_msg
+    );
 }
 
 #[test]
@@ -209,8 +224,11 @@ fn test_ulong_value_error_message_is_descriptive() {
     assert!(result.is_err(), "Should fail");
     let err_msg = format!("{:?}", result.unwrap_err());
     // Check that error contains type information
-    assert!(err_msg.contains("u32") || err_msg.contains("ulong_value") || err_msg.contains("type 7"),
-        "Error should mention target type: {}", err_msg);
+    assert!(
+        err_msg.contains("u32") || err_msg.contains("ulong_value") || err_msg.contains("type 7"),
+        "Error should mention target type: {}",
+        err_msg
+    );
 }
 
 // =============================================================================
@@ -305,15 +323,23 @@ fn test_long_value_little_endian_serialization() {
     let bytes = lv.to_bytes();
     // to_bytes() returns full binary format: [type][name_len][name][value_size][value_data]
     // For name "test" (4 bytes): 1 + 4 + 4 + 4 = 13 byte header, last 4 bytes are value
-    let value_bytes = &bytes[bytes.len()-4..];
-    assert_eq!(value_bytes, &[0x78, 0x56, 0x34, 0x12], "Should be little-endian");
+    let value_bytes = &bytes[bytes.len() - 4..];
+    assert_eq!(
+        value_bytes,
+        &[0x78, 0x56, 0x34, 0x12],
+        "Should be little-endian"
+    );
 }
 
 #[test]
 fn test_ulong_value_little_endian_serialization() {
     let ulv = ULongValue::new("test", 0x12345678).expect("Should create value");
     let bytes = ulv.to_bytes();
-    assert_eq!(bytes, vec![0x78, 0x56, 0x34, 0x12], "Should be little-endian");
+    assert_eq!(
+        bytes,
+        vec![0x78, 0x56, 0x34, 0x12],
+        "Should be little-endian"
+    );
 }
 
 #[test]
@@ -321,8 +347,12 @@ fn test_long_value_negative_little_endian() {
     let lv = LongValue::new("test", -1).expect("Should create value");
     let bytes = lv.to_bytes();
     // to_bytes() returns full binary format, extract last 4 bytes for value
-    let value_bytes = &bytes[bytes.len()-4..];
-    assert_eq!(value_bytes, &[0xFF, 0xFF, 0xFF, 0xFF], "Should be little-endian two's complement");
+    let value_bytes = &bytes[bytes.len() - 4..];
+    assert_eq!(
+        value_bytes,
+        &[0xFF, 0xFF, 0xFF, 0xFF],
+        "Should be little-endian two's complement"
+    );
 }
 
 // =============================================================================

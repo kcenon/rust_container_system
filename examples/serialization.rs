@@ -33,6 +33,8 @@
 //!
 //! Run with: cargo run --example serialization
 
+#![allow(deprecated)]
+
 use rust_container_system::prelude::*;
 use std::sync::Arc;
 
@@ -46,13 +48,28 @@ fn main() {
     container.set_message_type("market_data");
 
     // Add stock market data
-    container.add_value(Arc::new(StringValue::new("symbol", "AAPL"))).expect("Failed to add symbol");
-    container.add_value(Arc::new(DoubleValue::new("price", 175.50))).expect("Failed to add price");
-    container.add_value(Arc::new(LongValue::new("volume", 1000000).expect("Value out of range"))).expect("Failed to add volume");
-    container.add_value(Arc::new(BoolValue::new("is_active", true))).expect("Failed to add is_active");
-    container.add_value(Arc::new(IntValue::new("timestamp", 1234567890))).expect("Failed to add timestamp");
+    container
+        .add_value(Arc::new(StringValue::new("symbol", "AAPL")))
+        .expect("Failed to add symbol");
+    container
+        .add_value(Arc::new(DoubleValue::new("price", 175.50)))
+        .expect("Failed to add price");
+    container
+        .add_value(Arc::new(
+            LongValue::new("volume", 1000000).expect("Value out of range"),
+        ))
+        .expect("Failed to add volume");
+    container
+        .add_value(Arc::new(BoolValue::new("is_active", true)))
+        .expect("Failed to add is_active");
+    container
+        .add_value(Arc::new(IntValue::new("timestamp", 1234567890)))
+        .expect("Failed to add timestamp");
 
-    println!("Container created with {} values\n", container.value_count());
+    println!(
+        "Container created with {} values\n",
+        container.value_count()
+    );
 
     // JSON serialization
     println!("=== JSON Serialization ===");
@@ -95,7 +112,9 @@ fn main() {
 
     // Sample binary data: "Hello" in ASCII
     let sample_data = vec![0x48, 0x65, 0x6C, 0x6C, 0x6F];
-    bytes_container.add_value(Arc::new(BytesValue::new("data", sample_data))).expect("Failed to add data");
+    bytes_container
+        .add_value(Arc::new(BytesValue::new("data", sample_data)))
+        .expect("Failed to add data");
 
     // Bytes are encoded as base64 in JSON
     match bytes_container.to_json() {

@@ -32,11 +32,10 @@
 use crate::core::error::Result;
 use crate::core::value::Value;
 use crate::core::value_types::ValueType;
-use crate::values::primitive_values::{
-    BoolValue, ShortValue, UShortValue, UIntValue,
-    ULongValue, FloatValue, DoubleValue,
-};
 use crate::values::bytes_value::BytesValue;
+use crate::values::primitive_values::{
+    BoolValue, DoubleValue, FloatValue, ShortValue, UIntValue, ULongValue, UShortValue,
+};
 use std::any::Any;
 use std::fmt;
 use std::sync::Arc;
@@ -196,7 +195,12 @@ impl ArrayValue {
 
     /// Serialize to text format
     fn serialize_text(&self) -> String {
-        let mut result = format!("[{},{},{}];", self.name, self.value_type().to_str(), self.count());
+        let mut result = format!(
+            "[{},{},{}];",
+            self.name,
+            self.value_type().to_str(),
+            self.count()
+        );
 
         for element in &self.elements {
             result.push_str(&element.to_string());
@@ -273,9 +277,10 @@ impl ArrayValue {
 
         if data.len() < 13 {
             // type(1) + name_len(4) + value_size(4) + count(4)
-            return Err(ContainerError::InvalidDataFormat(
-                format!("ArrayValue binary data too short: {} bytes", data.len())
-            ));
+            return Err(ContainerError::InvalidDataFormat(format!(
+                "ArrayValue binary data too short: {} bytes",
+                data.len()
+            )));
         }
 
         let mut offset = 0;
@@ -285,9 +290,10 @@ impl ArrayValue {
         offset += 1;
 
         if type_id != ValueType::Array as u8 {
-            return Err(ContainerError::InvalidDataFormat(
-                format!("Expected ArrayValue type (15), got {}", type_id)
-            ));
+            return Err(ContainerError::InvalidDataFormat(format!(
+                "Expected ArrayValue type (15), got {}",
+                type_id
+            )));
         }
 
         // Read name length (4 bytes, little-endian)
@@ -301,18 +307,20 @@ impl ArrayValue {
 
         // Read name
         if offset + name_len > data.len() {
-            return Err(ContainerError::InvalidDataFormat(
-                format!("Name length {} exceeds data bounds", name_len)
-            ));
+            return Err(ContainerError::InvalidDataFormat(format!(
+                "Name length {} exceeds data bounds",
+                name_len
+            )));
         }
-        let name = String::from_utf8(data[offset..offset + name_len].to_vec())
-            .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8 in name: {}", e)))?;
+        let name = String::from_utf8(data[offset..offset + name_len].to_vec()).map_err(|e| {
+            ContainerError::InvalidDataFormat(format!("Invalid UTF-8 in name: {}", e))
+        })?;
         offset += name_len;
 
         // Read value size (4 bytes, little-endian)
         if offset + 4 > data.len() {
             return Err(ContainerError::InvalidDataFormat(
-                "Insufficient data for value_size".to_string()
+                "Insufficient data for value_size".to_string(),
             ));
         }
         let _value_size = u32::from_le_bytes([
@@ -326,7 +334,7 @@ impl ArrayValue {
         // Read element count (4 bytes, little-endian)
         if offset + 4 > data.len() {
             return Err(ContainerError::InvalidDataFormat(
-                "Insufficient data for element count".to_string()
+                "Insufficient data for element count".to_string(),
             ));
         }
         let count = u32::from_le_bytes([
@@ -342,9 +350,11 @@ impl ArrayValue {
 
         for i in 0..count {
             if offset >= data.len() {
-                return Err(ContainerError::InvalidDataFormat(
-                    format!("Unexpected end of data while reading element {}/{}", i + 1, count)
-                ));
+                return Err(ContainerError::InvalidDataFormat(format!(
+                    "Unexpected end of data while reading element {}/{}",
+                    i + 1,
+                    count
+                )));
             }
 
             // Extract remaining data for element deserialization
@@ -373,7 +383,7 @@ impl ArrayValue {
 
         if data.is_empty() {
             return Err(ContainerError::InvalidDataFormat(
-                "Empty data for value deserialization".to_string()
+                "Empty data for value deserialization".to_string(),
             ));
         }
 
@@ -392,14 +402,15 @@ impl ArrayValue {
             9 => ValueType::ULLong,
             10 => ValueType::Float,
             11 => ValueType::Double,
-            12 => ValueType::String,  // Matches C++ string_value = 12
-            13 => ValueType::Bytes,   // Matches C++ bytes_value = 13
+            12 => ValueType::String, // Matches C++ string_value = 12
+            13 => ValueType::Bytes,  // Matches C++ bytes_value = 13
             14 => ValueType::Container,
             15 => ValueType::Array,
             _ => {
-                return Err(ContainerError::InvalidDataFormat(
-                    format!("Unknown value type: {}", type_byte)
-                ));
+                return Err(ContainerError::InvalidDataFormat(format!(
+                    "Unknown value type: {}",
+                    type_byte
+                )));
             }
         };
 
@@ -409,26 +420,38 @@ impl ArrayValue {
                 // Format: [type:1][name_len:4][name][value_size:4][value:4]
                 if data.len() < 13 {
                     return Err(ContainerError::InvalidDataFormat(
-                        "Insufficient data for IntValue".to_string()
+                        "Insufficient data for IntValue".to_string(),
                     ));
                 }
 
                 let mut offset = 1;
 
                 // Name length
-                let name_len = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                let name_len = u32::from_le_bytes([
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                ]) as usize;
                 offset += 4;
 
                 // Name
-                let name = String::from_utf8(data[offset..offset + name_len].to_vec())
-                    .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e)))?;
+                let name =
+                    String::from_utf8(data[offset..offset + name_len].to_vec()).map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e))
+                    })?;
                 offset += name_len;
 
                 // Skip value_size (4 bytes)
                 offset += 4;
 
                 // Read int value (4 bytes, little-endian)
-                let value = i32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+                let value = i32::from_le_bytes([
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                ]);
                 offset += 4;
 
                 Ok((Arc::new(IntValue::new(name, value)), offset))
@@ -439,19 +462,26 @@ impl ArrayValue {
                 // Format: [type:1][name_len:4][name][value_size:4][value:8]
                 if data.len() < 17 {
                     return Err(ContainerError::InvalidDataFormat(
-                        "Insufficient data for LongValue".to_string()
+                        "Insufficient data for LongValue".to_string(),
                     ));
                 }
 
                 let mut offset = 1;
 
                 // Name length
-                let name_len = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                let name_len = u32::from_le_bytes([
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                ]) as usize;
                 offset += 4;
 
                 // Name
-                let name = String::from_utf8(data[offset..offset + name_len].to_vec())
-                    .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e)))?;
+                let name =
+                    String::from_utf8(data[offset..offset + name_len].to_vec()).map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e))
+                    })?;
                 offset += name_len;
 
                 // Skip value_size (4 bytes)
@@ -459,8 +489,14 @@ impl ArrayValue {
 
                 // Read long value (8 bytes, little-endian)
                 let value = i64::from_le_bytes([
-                    data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
-                    data[offset + 4], data[offset + 5], data[offset + 6], data[offset + 7],
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                    data[offset + 4],
+                    data[offset + 5],
+                    data[offset + 6],
+                    data[offset + 7],
                 ]);
                 offset += 8;
 
@@ -472,23 +508,30 @@ impl ArrayValue {
                 // Format: [type:1][name_len:4][name][value_size:4][value:1]
                 if data.len() < 10 {
                     return Err(ContainerError::InvalidDataFormat(
-                        "Insufficient data for BoolValue".to_string()
+                        "Insufficient data for BoolValue".to_string(),
                     ));
                 }
 
                 let mut offset = 1;
 
-                let name_len = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                let name_len = u32::from_le_bytes([
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                ]) as usize;
                 offset += 4;
 
                 if offset + name_len + 4 + 1 > data.len() {
                     return Err(ContainerError::InvalidDataFormat(
-                        "Data too short for BoolValue".to_string()
+                        "Data too short for BoolValue".to_string(),
                     ));
                 }
 
-                let name = String::from_utf8(data[offset..offset + name_len].to_vec())
-                    .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e)))?;
+                let name =
+                    String::from_utf8(data[offset..offset + name_len].to_vec()).map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e))
+                    })?;
                 offset += name_len;
 
                 offset += 4; // Skip value_size
@@ -504,23 +547,30 @@ impl ArrayValue {
                 // Format: [type:1][name_len:4][name][value_size:4][value:2]
                 if data.len() < 11 {
                     return Err(ContainerError::InvalidDataFormat(
-                        "Insufficient data for ShortValue".to_string()
+                        "Insufficient data for ShortValue".to_string(),
                     ));
                 }
 
                 let mut offset = 1;
 
-                let name_len = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                let name_len = u32::from_le_bytes([
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                ]) as usize;
                 offset += 4;
 
                 if offset + name_len + 4 + 2 > data.len() {
                     return Err(ContainerError::InvalidDataFormat(
-                        "Data too short for ShortValue".to_string()
+                        "Data too short for ShortValue".to_string(),
                     ));
                 }
 
-                let name = String::from_utf8(data[offset..offset + name_len].to_vec())
-                    .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e)))?;
+                let name =
+                    String::from_utf8(data[offset..offset + name_len].to_vec()).map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e))
+                    })?;
                 offset += name_len;
 
                 offset += 4; // Skip value_size
@@ -536,23 +586,30 @@ impl ArrayValue {
                 // Format: [type:1][name_len:4][name][value_size:4][value:2]
                 if data.len() < 11 {
                     return Err(ContainerError::InvalidDataFormat(
-                        "Insufficient data for UShortValue".to_string()
+                        "Insufficient data for UShortValue".to_string(),
                     ));
                 }
 
                 let mut offset = 1;
 
-                let name_len = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                let name_len = u32::from_le_bytes([
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                ]) as usize;
                 offset += 4;
 
                 if offset + name_len + 4 + 2 > data.len() {
                     return Err(ContainerError::InvalidDataFormat(
-                        "Data too short for UShortValue".to_string()
+                        "Data too short for UShortValue".to_string(),
                     ));
                 }
 
-                let name = String::from_utf8(data[offset..offset + name_len].to_vec())
-                    .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e)))?;
+                let name =
+                    String::from_utf8(data[offset..offset + name_len].to_vec()).map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e))
+                    })?;
                 offset += name_len;
 
                 offset += 4; // Skip value_size
@@ -568,22 +625,34 @@ impl ArrayValue {
                 // Format: [type:1][name_len:4][name][value_size:4][value:4]
                 if data.len() < 13 {
                     return Err(ContainerError::InvalidDataFormat(
-                        "Insufficient data for UIntValue".to_string()
+                        "Insufficient data for UIntValue".to_string(),
                     ));
                 }
 
                 let mut offset = 1;
 
-                let name_len = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                let name_len = u32::from_le_bytes([
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                ]) as usize;
                 offset += 4;
 
-                let name = String::from_utf8(data[offset..offset + name_len].to_vec())
-                    .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e)))?;
+                let name =
+                    String::from_utf8(data[offset..offset + name_len].to_vec()).map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e))
+                    })?;
                 offset += name_len;
 
                 offset += 4; // Skip value_size
 
-                let value = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+                let value = u32::from_le_bytes([
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                ]);
                 offset += 4;
 
                 Ok((Arc::new(UIntValue::new(name, value)), offset))
@@ -594,24 +663,37 @@ impl ArrayValue {
                 // Format: [type:1][name_len:4][name][value_size:4][value:8]
                 if data.len() < 17 {
                     return Err(ContainerError::InvalidDataFormat(
-                        "Insufficient data for ULongValue/ULLongValue".to_string()
+                        "Insufficient data for ULongValue/ULLongValue".to_string(),
                     ));
                 }
 
                 let mut offset = 1;
 
-                let name_len = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                let name_len = u32::from_le_bytes([
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                ]) as usize;
                 offset += 4;
 
-                let name = String::from_utf8(data[offset..offset + name_len].to_vec())
-                    .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e)))?;
+                let name =
+                    String::from_utf8(data[offset..offset + name_len].to_vec()).map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e))
+                    })?;
                 offset += name_len;
 
                 offset += 4; // Skip value_size
 
                 let value = u64::from_le_bytes([
-                    data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
-                    data[offset + 4], data[offset + 5], data[offset + 6], data[offset + 7],
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                    data[offset + 4],
+                    data[offset + 5],
+                    data[offset + 6],
+                    data[offset + 7],
                 ]);
                 offset += 8;
 
@@ -623,22 +705,34 @@ impl ArrayValue {
                 // Format: [type:1][name_len:4][name][value_size:4][value:4]
                 if data.len() < 13 {
                     return Err(ContainerError::InvalidDataFormat(
-                        "Insufficient data for FloatValue".to_string()
+                        "Insufficient data for FloatValue".to_string(),
                     ));
                 }
 
                 let mut offset = 1;
 
-                let name_len = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                let name_len = u32::from_le_bytes([
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                ]) as usize;
                 offset += 4;
 
-                let name = String::from_utf8(data[offset..offset + name_len].to_vec())
-                    .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e)))?;
+                let name =
+                    String::from_utf8(data[offset..offset + name_len].to_vec()).map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e))
+                    })?;
                 offset += name_len;
 
                 offset += 4; // Skip value_size
 
-                let bits = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+                let bits = u32::from_le_bytes([
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                ]);
                 let value = f32::from_bits(bits);
                 offset += 4;
 
@@ -650,24 +744,37 @@ impl ArrayValue {
                 // Format: [type:1][name_len:4][name][value_size:4][value:8]
                 if data.len() < 17 {
                     return Err(ContainerError::InvalidDataFormat(
-                        "Insufficient data for DoubleValue".to_string()
+                        "Insufficient data for DoubleValue".to_string(),
                     ));
                 }
 
                 let mut offset = 1;
 
-                let name_len = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                let name_len = u32::from_le_bytes([
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                ]) as usize;
                 offset += 4;
 
-                let name = String::from_utf8(data[offset..offset + name_len].to_vec())
-                    .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e)))?;
+                let name =
+                    String::from_utf8(data[offset..offset + name_len].to_vec()).map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e))
+                    })?;
                 offset += name_len;
 
                 offset += 4; // Skip value_size
 
                 let bits = u64::from_le_bytes([
-                    data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
-                    data[offset + 4], data[offset + 5], data[offset + 6], data[offset + 7],
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                    data[offset + 4],
+                    data[offset + 5],
+                    data[offset + 6],
+                    data[offset + 7],
                 ]);
                 let value = f64::from_bits(bits);
                 offset += 8;
@@ -680,20 +787,32 @@ impl ArrayValue {
                 // Format: [type:1][name_len:4][name][value_size:4][bytes]
                 if data.len() < 13 {
                     return Err(ContainerError::InvalidDataFormat(
-                        "Insufficient data for BytesValue".to_string()
+                        "Insufficient data for BytesValue".to_string(),
                     ));
                 }
 
                 let mut offset = 1;
 
-                let name_len = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                let name_len = u32::from_le_bytes([
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                ]) as usize;
                 offset += 4;
 
-                let name = String::from_utf8(data[offset..offset + name_len].to_vec())
-                    .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e)))?;
+                let name =
+                    String::from_utf8(data[offset..offset + name_len].to_vec()).map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e))
+                    })?;
                 offset += name_len;
 
-                let value_size = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                let value_size = u32::from_le_bytes([
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                ]) as usize;
                 offset += 4;
 
                 let value = data[offset..offset + value_size].to_vec();
@@ -707,38 +826,54 @@ impl ArrayValue {
                 // Format: [type:1][name_len:4][name][value_size:4][string_bytes]
                 if data.len() < 13 {
                     return Err(ContainerError::InvalidDataFormat(
-                        "Insufficient data for StringValue".to_string()
+                        "Insufficient data for StringValue".to_string(),
                     ));
                 }
 
                 let mut offset = 1;
 
                 // Name length
-                let name_len = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                let name_len = u32::from_le_bytes([
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                ]) as usize;
                 offset += 4;
 
                 // Name
-                let name = String::from_utf8(data[offset..offset + name_len].to_vec())
-                    .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e)))?;
+                let name =
+                    String::from_utf8(data[offset..offset + name_len].to_vec()).map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid UTF-8: {}", e))
+                    })?;
                 offset += name_len;
 
                 // Value size
-                let value_size = u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]) as usize;
+                let value_size = u32::from_le_bytes([
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                ]) as usize;
                 offset += 4;
 
                 // String bytes
                 let str_value = String::from_utf8(data[offset..offset + value_size].to_vec())
-                    .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid UTF-8 in string value: {}", e)))?;
+                    .map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!(
+                            "Invalid UTF-8 in string value: {}",
+                            e
+                        ))
+                    })?;
                 offset += value_size;
 
                 Ok((Arc::new(StringValue::new(name, str_value)), offset))
             }
 
-            _ => {
-                Err(ContainerError::InvalidDataFormat(
-                    format!("Unsupported value type for deserialization: {:?}", type_id)
-                ))
-            }
+            _ => Err(ContainerError::InvalidDataFormat(format!(
+                "Unsupported value type for deserialization: {:?}",
+                type_id
+            ))),
         }
     }
 }
@@ -788,7 +923,8 @@ impl Value for ArrayValue {
     fn to_json(&self) -> Result<String> {
         use serde_json::json;
 
-        let elements_json: Vec<_> = self.elements
+        let elements_json: Vec<_> = self
+            .elements
             .iter()
             .map(|e| e.to_json())
             .collect::<Result<Vec<_>>>()?;
@@ -803,7 +939,11 @@ impl Value for ArrayValue {
     }
 
     fn to_xml(&self) -> Result<String> {
-        let mut xml = format!(r#"<array name="{}" count="{}">"#, self.name, self.elements.len());
+        let mut xml = format!(
+            r#"<array name="{}" count="{}">"#,
+            self.name,
+            self.elements.len()
+        );
 
         for element in &self.elements {
             xml.push_str(&element.to_xml()?);

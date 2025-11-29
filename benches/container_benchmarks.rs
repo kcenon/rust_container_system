@@ -29,7 +29,7 @@
 
 //! Criterion benchmarks for rust_container_system
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput, BenchmarkId};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use rust_container_system::prelude::*;
 use std::sync::Arc;
 
@@ -167,6 +167,7 @@ fn bench_container_get_value(c: &mut Criterion) {
 // Serialization Benchmarks
 // ============================================================================
 
+#[allow(deprecated)]
 fn bench_json_serialization(c: &mut Criterion) {
     let mut group = c.benchmark_group("json_serialization");
 
@@ -190,17 +191,22 @@ fn bench_json_serialization(c: &mut Criterion) {
 
         group.throughput(Throughput::Elements(*size as u64));
 
-        group.bench_with_input(BenchmarkId::from_parameter(size), &container, |b, container| {
-            b.iter(|| {
-                let json = container.to_json().unwrap();
-                black_box(json)
-            });
-        });
+        group.bench_with_input(
+            BenchmarkId::from_parameter(size),
+            &container,
+            |b, container| {
+                b.iter(|| {
+                    let json = container.to_json().unwrap();
+                    black_box(json)
+                });
+            },
+        );
     }
 
     group.finish();
 }
 
+#[allow(deprecated)]
 fn bench_xml_serialization(c: &mut Criterion) {
     let mut group = c.benchmark_group("xml_serialization");
 
@@ -218,12 +224,16 @@ fn bench_xml_serialization(c: &mut Criterion) {
 
         group.throughput(Throughput::Elements(*size as u64));
 
-        group.bench_with_input(BenchmarkId::from_parameter(size), &container, |b, container| {
-            b.iter(|| {
-                let xml = container.to_xml().unwrap();
-                black_box(xml)
-            });
-        });
+        group.bench_with_input(
+            BenchmarkId::from_parameter(size),
+            &container,
+            |b, container| {
+                b.iter(|| {
+                    let xml = container.to_xml().unwrap();
+                    black_box(xml)
+                });
+            },
+        );
     }
 
     group.finish();
@@ -246,12 +256,16 @@ fn bench_container_clone(c: &mut Criterion) {
 
         group.throughput(Throughput::Elements(*size as u64));
 
-        group.bench_with_input(BenchmarkId::from_parameter(size), &container, |b, container| {
-            b.iter(|| {
-                let cloned = container.clone();
-                black_box(cloned)
-            });
-        });
+        group.bench_with_input(
+            BenchmarkId::from_parameter(size),
+            &container,
+            |b, container| {
+                b.iter(|| {
+                    let cloned = container.clone();
+                    black_box(cloned)
+                });
+            },
+        );
     }
 
     group.finish();

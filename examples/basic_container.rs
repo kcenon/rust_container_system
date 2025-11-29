@@ -47,17 +47,37 @@ fn main() {
     container.set_message_type("user_data");
 
     println!("Container created:");
-    println!("  Source: {} / {}", container.source_id(), container.source_sub_id());
-    println!("  Target: {} / {}", container.target_id(), container.target_sub_id());
+    println!(
+        "  Source: {} / {}",
+        container.source_id(),
+        container.source_sub_id()
+    );
+    println!(
+        "  Target: {} / {}",
+        container.target_id(),
+        container.target_sub_id()
+    );
     println!("  Message Type: {}\n", container.message_type());
 
     // Add various types of values
     println!("Adding values...");
-    container.add_value(Arc::new(IntValue::new("user_id", 12345))).expect("Failed to add user_id");
-    container.add_value(Arc::new(StringValue::new("username", "john_doe"))).expect("Failed to add username");
-    container.add_value(Arc::new(DoubleValue::new("balance", 1500.75))).expect("Failed to add balance");
-    container.add_value(Arc::new(BoolValue::new("active", true))).expect("Failed to add active");
-    container.add_value(Arc::new(LongValue::new("timestamp", 1234567890).expect("Value out of range"))).expect("Failed to add timestamp");
+    container
+        .add_value(Arc::new(IntValue::new("user_id", 12345)))
+        .expect("Failed to add user_id");
+    container
+        .add_value(Arc::new(StringValue::new("username", "john_doe")))
+        .expect("Failed to add username");
+    container
+        .add_value(Arc::new(DoubleValue::new("balance", 1500.75)))
+        .expect("Failed to add balance");
+    container
+        .add_value(Arc::new(BoolValue::new("active", true)))
+        .expect("Failed to add active");
+    container
+        .add_value(Arc::new(
+            LongValue::new("timestamp", 1234567890).expect("Value out of range"),
+        ))
+        .expect("Failed to add timestamp");
     println!("  Added {} values\n", container.value_count());
 
     // Retrieve and display values
@@ -81,8 +101,16 @@ fn main() {
     // Swap header (source <-> target)
     println!("\nSwapping header...");
     container.swap_header();
-    println!("  Source: {} / {}", container.source_id(), container.source_sub_id());
-    println!("  Target: {} / {}", container.target_id(), container.target_sub_id());
+    println!(
+        "  Source: {} / {}",
+        container.source_id(),
+        container.source_sub_id()
+    );
+    println!(
+        "  Target: {} / {}",
+        container.target_id(),
+        container.target_sub_id()
+    );
 
     // Copy container
     println!("\nCreating a copy...");
@@ -90,7 +118,10 @@ fn main() {
     println!("  Copy has {} values", copy.value_count());
 
     let header_only = container.copy(false);
-    println!("  Header-only copy has {} values", header_only.value_count());
+    println!(
+        "  Header-only copy has {} values",
+        header_only.value_count()
+    );
 
     println!("\n=== Example Complete ===");
 }

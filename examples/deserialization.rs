@@ -66,8 +66,16 @@ fn wire_protocol_roundtrip() {
 
     // Verify metadata
     println!("\nRestored container:");
-    println!("  Source: {}:{}", restored.source_id(), restored.source_sub_id());
-    println!("  Target: {}:{}", restored.target_id(), restored.target_sub_id());
+    println!(
+        "  Source: {}:{}",
+        restored.source_id(),
+        restored.source_sub_id()
+    );
+    println!(
+        "  Target: {}:{}",
+        restored.target_id(),
+        restored.target_sub_id()
+    );
     println!("  Type: {}", restored.message_type());
     println!("  Values: {}", restored.value_count());
 
@@ -75,7 +83,12 @@ fn wire_protocol_roundtrip() {
     println!("\nValues:");
     for name in ["user_id", "username", "verified", "balance"] {
         if let Some(value) = restored.get_value(name) {
-            println!("  {} ({:?}): {}", name, value.value_type(), value.to_string());
+            println!(
+                "  {} ({:?}): {}",
+                name,
+                value.value_type(),
+                value.to_string()
+            );
         }
     }
 
@@ -142,8 +155,16 @@ fn cpp_interop_example() {
     match ValueContainer::deserialize_cpp_wire(cpp_data) {
         Ok(container) => {
             println!("\nSuccessfully parsed C++ data:");
-            println!("  Source: {} ({})", container.source_id(), container.source_sub_id());
-            println!("  Target: {} ({})", container.target_id(), container.target_sub_id());
+            println!(
+                "  Source: {} ({})",
+                container.source_id(),
+                container.source_sub_id()
+            );
+            println!(
+                "  Target: {} ({})",
+                container.target_id(),
+                container.target_sub_id()
+            );
             println!("  Message type: {}", container.message_type());
 
             println!("\n  Values:");

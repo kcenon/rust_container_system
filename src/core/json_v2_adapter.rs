@@ -75,7 +75,7 @@
 
 use crate::core::{ContainerError, Result, Value, ValueContainer, ValueType};
 use crate::values::*;
-use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use serde_json::{json, Map, Value as JsonValue};
 use std::sync::Arc;
 
@@ -241,20 +241,23 @@ impl JsonV2Adapter {
         let data: JsonValue = serde_json::from_str(json_str)
             .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid JSON: {}", e)))?;
 
-        let container_data = data.get("container")
-            .ok_or_else(|| ContainerError::InvalidDataFormat(
-                "Missing 'container' root element in JSON v2.0".to_string()
-            ))?;
+        let container_data = data.get("container").ok_or_else(|| {
+            ContainerError::InvalidDataFormat(
+                "Missing 'container' root element in JSON v2.0".to_string(),
+            )
+        })?;
 
         // Check version
-        let version = container_data.get("version")
+        let version = container_data
+            .get("version")
             .and_then(|v| v.as_str())
             .unwrap_or("1.0");
 
         if version != V2_FORMAT_VERSION {
-            return Err(ContainerError::InvalidDataFormat(
-                format!("Unsupported JSON version: {} (expected {})", version, V2_FORMAT_VERSION)
-            ));
+            return Err(ContainerError::InvalidDataFormat(format!(
+                "Unsupported JSON version: {} (expected {})",
+                version, V2_FORMAT_VERSION
+            )));
         }
 
         // Parse metadata
@@ -266,7 +269,10 @@ impl JsonV2Adapter {
         let source_sub_id = source.get("sub_id").and_then(|v| v.as_str()).unwrap_or("");
         let target_id = target.get("id").and_then(|v| v.as_str()).unwrap_or("");
         let target_sub_id = target.get("sub_id").and_then(|v| v.as_str()).unwrap_or("");
-        let message_type = metadata.get("message_type").and_then(|v| v.as_str()).unwrap_or("");
+        let message_type = metadata
+            .get("message_type")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
 
         // Create container
         let mut container = ValueContainer::new();
@@ -293,16 +299,30 @@ impl JsonV2Adapter {
         let data: JsonValue = serde_json::from_str(json_str)
             .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid JSON: {}", e)))?;
 
-        let header = data.get("header")
-            .ok_or_else(|| ContainerError::InvalidDataFormat(
-                "Missing 'header' field in C++ JSON".to_string()
-            ))?;
+        let header = data.get("header").ok_or_else(|| {
+            ContainerError::InvalidDataFormat("Missing 'header' field in C++ JSON".to_string())
+        })?;
 
-        let message_type = header.get("message_type").and_then(|v| v.as_str()).unwrap_or("");
-        let source_id = header.get("source_id").and_then(|v| v.as_str()).unwrap_or("");
-        let source_sub_id = header.get("source_sub_id").and_then(|v| v.as_str()).unwrap_or("");
-        let target_id = header.get("target_id").and_then(|v| v.as_str()).unwrap_or("");
-        let target_sub_id = header.get("target_sub_id").and_then(|v| v.as_str()).unwrap_or("");
+        let message_type = header
+            .get("message_type")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+        let source_id = header
+            .get("source_id")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+        let source_sub_id = header
+            .get("source_sub_id")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+        let target_id = header
+            .get("target_id")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+        let target_sub_id = header
+            .get("target_sub_id")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
 
         let mut container = ValueContainer::new();
         container.set_source(source_id, source_sub_id);
@@ -388,17 +408,20 @@ impl JsonV2Adapter {
         }
 
         // Check for C++ format (has "header" object)
-        if json_data.get("header").is_some() {
-            if json_data.get("values").and_then(|v| v.as_object()).is_some() {
-                return SerializationFormat::CppJson;
-            }
+        if json_data.get("header").is_some()
+            && json_data
+                .get("values")
+                .and_then(|v| v.as_object())
+                .is_some()
+        {
+            return SerializationFormat::CppJson;
         }
 
         // Check for Python/.NET format (flat with values array)
-        if json_data.get("message_type").is_some() {
-            if json_data.get("values").and_then(|v| v.as_array()).is_some() {
-                return SerializationFormat::PythonJson;
-            }
+        if json_data.get("message_type").is_some()
+            && json_data.get("values").and_then(|v| v.as_array()).is_some()
+        {
+            return SerializationFormat::PythonJson;
         }
 
         SerializationFormat::Unknown
@@ -434,9 +457,10 @@ impl JsonV2Adapter {
                 Self::from_python_json(data)?
             }
             SerializationFormat::Unknown => {
-                return Err(ContainerError::InvalidDataFormat(
-                    format!("Unsupported source format: {}", source_format)
-                ));
+                return Err(ContainerError::InvalidDataFormat(format!(
+                    "Unsupported source format: {}",
+                    source_format
+                )));
             }
         };
 
@@ -448,11 +472,9 @@ impl JsonV2Adapter {
                 crate::core::wire_protocol::serialize_cpp_wire(&container)
             }
             SerializationFormat::PythonJson => Self::to_python_json(&container, pretty),
-            SerializationFormat::Unknown => {
-                Err(ContainerError::InvalidDataFormat(
-                    "Cannot convert to unknown format".to_string()
-                ))
-            }
+            SerializationFormat::Unknown => Err(ContainerError::InvalidDataFormat(
+                "Cannot convert to unknown format".to_string(),
+            )),
         }
     }
 
@@ -490,11 +512,20 @@ impl JsonV2Adapter {
         let data: JsonValue = serde_json::from_str(json_str)
             .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid JSON: {}", e)))?;
 
-        let message_type = data.get("message_type").and_then(|v| v.as_str()).unwrap_or("");
+        let message_type = data
+            .get("message_type")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
         let source_id = data.get("source_id").and_then(|v| v.as_str()).unwrap_or("");
-        let source_sub_id = data.get("source_sub_id").and_then(|v| v.as_str()).unwrap_or("");
+        let source_sub_id = data
+            .get("source_sub_id")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
         let target_id = data.get("target_id").and_then(|v| v.as_str()).unwrap_or("");
-        let target_sub_id = data.get("target_sub_id").and_then(|v| v.as_str()).unwrap_or("");
+        let target_sub_id = data
+            .get("target_sub_id")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
 
         let mut container = ValueContainer::new();
         container.set_source(source_id, source_sub_id);
@@ -576,10 +607,13 @@ impl JsonV2Adapter {
                     let children: Vec<JsonValue> = container_val
                         .children()
                         .iter()
-                        .map(|child| Self::value_to_v2_dict(child))
+                        .map(Self::value_to_v2_dict)
                         .collect();
                     obj.insert("data".to_string(), json!(children));
-                    obj.insert("child_count".to_string(), json!(container_val.child_count()));
+                    obj.insert(
+                        "child_count".to_string(),
+                        json!(container_val.child_count()),
+                    );
                 } else {
                     obj.insert("data".to_string(), json!([]));
                     obj.insert("child_count".to_string(), json!(0));
@@ -591,7 +625,7 @@ impl JsonV2Adapter {
                     let elements: Vec<JsonValue> = array_val
                         .elements()
                         .iter()
-                        .map(|elem| Self::value_to_v2_dict(elem))
+                        .map(Self::value_to_v2_dict)
                         .collect();
                     obj.insert("data".to_string(), json!(elements));
                     obj.insert("element_count".to_string(), json!(array_val.count()));
@@ -640,9 +674,7 @@ impl JsonV2Adapter {
         let data = value_data.get("data");
 
         match value_type {
-            ValueType::Null => {
-                Some(Arc::new(ContainerValue::new(name, vec![])))
-            }
+            ValueType::Null => Some(Arc::new(ContainerValue::new(name, vec![]))),
             ValueType::Bool => {
                 let val = data?.as_bool().unwrap_or(false);
                 Some(Arc::new(BoolValue::new(name, val)))
@@ -665,11 +697,15 @@ impl JsonV2Adapter {
             }
             ValueType::Long => {
                 let val = data?.as_i64().unwrap_or(0);
-                LongValue::new(name, val).ok().map(|v| Arc::new(v) as Arc<dyn Value>)
+                LongValue::new(name, val)
+                    .ok()
+                    .map(|v| Arc::new(v) as Arc<dyn Value>)
             }
             ValueType::ULong => {
                 let val = data?.as_u64().unwrap_or(0);
-                ULongValue::new(name, val).ok().map(|v| Arc::new(v) as Arc<dyn Value>)
+                ULongValue::new(name, val)
+                    .ok()
+                    .map(|v| Arc::new(v) as Arc<dyn Value>)
             }
             ValueType::LLong => {
                 let val = data?.as_i64().unwrap_or(0);
@@ -693,16 +729,22 @@ impl JsonV2Adapter {
             }
             ValueType::Bytes => {
                 // Decode base64
-                let encoding = value_data.get("encoding").and_then(|v| v.as_str()).unwrap_or("base64");
+                let encoding = value_data
+                    .get("encoding")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("base64");
                 let data_str = data?.as_str().unwrap_or("");
 
                 if encoding == "base64" {
                     match BASE64.decode(data_str) {
                         Ok(bytes) => Some(Arc::new(BytesValue::new(name, bytes))),
-                        Err(_) => Some(Arc::new(BytesValue::new(name, vec![])))
+                        Err(_) => Some(Arc::new(BytesValue::new(name, vec![]))),
                     }
                 } else {
-                    Some(Arc::new(BytesValue::new(name, data_str.as_bytes().to_vec())))
+                    Some(Arc::new(BytesValue::new(
+                        name,
+                        data_str.as_bytes().to_vec(),
+                    )))
                 }
             }
             ValueType::Container => {
@@ -759,55 +801,53 @@ impl JsonV2Adapter {
                 let val = data_str.to_lowercase() == "true" || data_str == "1";
                 Some(Arc::new(BoolValue::new(name, val)))
             }
-            ValueType::Short => {
-                data_str.parse::<i16>().ok()
-                    .map(|v| Arc::new(ShortValue::new(name, v)) as Arc<dyn Value>)
-            }
-            ValueType::UShort => {
-                data_str.parse::<u16>().ok()
-                    .map(|v| Arc::new(UShortValue::new(name, v)) as Arc<dyn Value>)
-            }
-            ValueType::Int => {
-                data_str.parse::<i32>().ok()
-                    .map(|v| Arc::new(IntValue::new(name, v)) as Arc<dyn Value>)
-            }
-            ValueType::UInt => {
-                data_str.parse::<u32>().ok()
-                    .map(|v| Arc::new(UIntValue::new(name, v)) as Arc<dyn Value>)
-            }
-            ValueType::Long => {
-                data_str.parse::<i64>().ok()
-                    .and_then(|v| LongValue::new(name, v).ok())
-                    .map(|v| Arc::new(v) as Arc<dyn Value>)
-            }
-            ValueType::ULong => {
-                data_str.parse::<u64>().ok()
-                    .and_then(|v| ULongValue::new(name, v).ok())
-                    .map(|v| Arc::new(v) as Arc<dyn Value>)
-            }
-            ValueType::LLong => {
-                data_str.parse::<i64>().ok()
-                    .map(|v| Arc::new(LLongValue::new(name, v)) as Arc<dyn Value>)
-            }
-            ValueType::ULLong => {
-                data_str.parse::<u64>().ok()
-                    .map(|v| Arc::new(ULLongValue::new(name, v)) as Arc<dyn Value>)
-            }
-            ValueType::Float => {
-                data_str.parse::<f32>().ok()
-                    .map(|v| Arc::new(FloatValue::new(name, v)) as Arc<dyn Value>)
-            }
-            ValueType::Double => {
-                data_str.parse::<f64>().ok()
-                    .map(|v| Arc::new(DoubleValue::new(name, v)) as Arc<dyn Value>)
-            }
-            ValueType::String => {
-                Some(Arc::new(StringValue::new(name, data_str)))
-            }
-            ValueType::Bytes => {
-                BASE64.decode(data_str).ok()
-                    .map(|bytes| Arc::new(BytesValue::new(name, bytes)) as Arc<dyn Value>)
-            }
+            ValueType::Short => data_str
+                .parse::<i16>()
+                .ok()
+                .map(|v| Arc::new(ShortValue::new(name, v)) as Arc<dyn Value>),
+            ValueType::UShort => data_str
+                .parse::<u16>()
+                .ok()
+                .map(|v| Arc::new(UShortValue::new(name, v)) as Arc<dyn Value>),
+            ValueType::Int => data_str
+                .parse::<i32>()
+                .ok()
+                .map(|v| Arc::new(IntValue::new(name, v)) as Arc<dyn Value>),
+            ValueType::UInt => data_str
+                .parse::<u32>()
+                .ok()
+                .map(|v| Arc::new(UIntValue::new(name, v)) as Arc<dyn Value>),
+            ValueType::Long => data_str
+                .parse::<i64>()
+                .ok()
+                .and_then(|v| LongValue::new(name, v).ok())
+                .map(|v| Arc::new(v) as Arc<dyn Value>),
+            ValueType::ULong => data_str
+                .parse::<u64>()
+                .ok()
+                .and_then(|v| ULongValue::new(name, v).ok())
+                .map(|v| Arc::new(v) as Arc<dyn Value>),
+            ValueType::LLong => data_str
+                .parse::<i64>()
+                .ok()
+                .map(|v| Arc::new(LLongValue::new(name, v)) as Arc<dyn Value>),
+            ValueType::ULLong => data_str
+                .parse::<u64>()
+                .ok()
+                .map(|v| Arc::new(ULLongValue::new(name, v)) as Arc<dyn Value>),
+            ValueType::Float => data_str
+                .parse::<f32>()
+                .ok()
+                .map(|v| Arc::new(FloatValue::new(name, v)) as Arc<dyn Value>),
+            ValueType::Double => data_str
+                .parse::<f64>()
+                .ok()
+                .map(|v| Arc::new(DoubleValue::new(name, v)) as Arc<dyn Value>),
+            ValueType::String => Some(Arc::new(StringValue::new(name, data_str))),
+            ValueType::Bytes => BASE64
+                .decode(data_str)
+                .ok()
+                .map(|bytes| Arc::new(BytesValue::new(name, bytes)) as Arc<dyn Value>),
             _ => None,
         }
     }
@@ -815,12 +855,14 @@ impl JsonV2Adapter {
     fn value_to_string_data(value: &Arc<dyn Value>) -> String {
         match value.value_type() {
             ValueType::Bool => {
-                if value.to_bool().unwrap_or(false) { "true".to_string() } else { "false".to_string() }
+                if value.to_bool().unwrap_or(false) {
+                    "true".to_string()
+                } else {
+                    "false".to_string()
+                }
             }
-            ValueType::Bytes => {
-                BASE64.encode(&value.to_bytes())
-            }
-            _ => value.to_string()
+            ValueType::Bytes => BASE64.encode(value.to_bytes()),
+            _ => value.to_string(),
         }
     }
 }
@@ -835,8 +877,12 @@ mod tests {
         container.set_source("client", "session");
         container.set_target("server", "handler");
         container.set_message_type("test_msg");
-        container.add_value(Arc::new(IntValue::new("count", 42))).unwrap();
-        container.add_value(Arc::new(StringValue::new("name", "Alice"))).unwrap();
+        container
+            .add_value(Arc::new(IntValue::new("count", 42)))
+            .unwrap();
+        container
+            .add_value(Arc::new(StringValue::new("name", "Alice")))
+            .unwrap();
 
         let json = JsonV2Adapter::to_v2_json(&container, true).unwrap();
 
@@ -885,9 +931,15 @@ mod tests {
         let mut original = ValueContainer::new();
         original.set_source("sender", "s1");
         original.set_message_type("data");
-        original.add_value(Arc::new(IntValue::new("x", 100))).unwrap();
-        original.add_value(Arc::new(BoolValue::new("flag", true))).unwrap();
-        original.add_value(Arc::new(DoubleValue::new("pi", 3.14159))).unwrap();
+        original
+            .add_value(Arc::new(IntValue::new("x", 100)))
+            .unwrap();
+        original
+            .add_value(Arc::new(BoolValue::new("flag", true)))
+            .unwrap();
+        original
+            .add_value(Arc::new(DoubleValue::new("pi", std::f64::consts::PI)))
+            .unwrap();
 
         let json = JsonV2Adapter::to_v2_json(&original, false).unwrap();
         let restored = JsonV2Adapter::from_v2_json(&json).unwrap();
@@ -903,19 +955,23 @@ mod tests {
         assert!(flag.to_bool().unwrap());
 
         let pi = restored.get_value("pi").unwrap();
-        assert!((pi.to_double().unwrap() - 3.14159).abs() < 0.00001);
+        assert!((pi.to_double().unwrap() - std::f64::consts::PI).abs() < 0.00001);
     }
 
     #[test]
     fn test_bytes_base64_encoding() {
         let mut container = ValueContainer::new();
         let test_bytes = vec![0x48, 0x65, 0x6c, 0x6c, 0x6f]; // "Hello"
-        container.add_value(Arc::new(BytesValue::new("data", test_bytes.clone()))).unwrap();
+        container
+            .add_value(Arc::new(BytesValue::new("data", test_bytes.clone())))
+            .unwrap();
 
         let json = JsonV2Adapter::to_v2_json(&container, false).unwrap();
         assert!(json.contains("SGVsbG8=")); // Base64 for "Hello"
-        // Check encoding field (compact JSON has no spaces)
-        assert!(json.contains("\"encoding\":\"base64\"") || json.contains("\"encoding\": \"base64\""));
+                                            // Check encoding field (compact JSON has no spaces)
+        assert!(
+            json.contains("\"encoding\":\"base64\"") || json.contains("\"encoding\": \"base64\"")
+        );
 
         let restored = JsonV2Adapter::from_v2_json(&json).unwrap();
         let data = restored.get_value("data").unwrap();
@@ -928,19 +984,33 @@ mod tests {
     fn test_detect_format() {
         // JSON v2.0
         let v2_json = r#"{"container": {"version": "2.0", "metadata": {}, "values": []}}"#;
-        assert_eq!(JsonV2Adapter::detect_format(v2_json), SerializationFormat::JsonV2);
+        assert_eq!(
+            JsonV2Adapter::detect_format(v2_json),
+            SerializationFormat::JsonV2
+        );
 
         // C++ JSON
-        let cpp_json = r#"{"header": {"message_type": "test"}, "values": {"key": {"type": 4, "data": "42"}}}"#;
-        assert_eq!(JsonV2Adapter::detect_format(cpp_json), SerializationFormat::CppJson);
+        let cpp_json =
+            r#"{"header": {"message_type": "test"}, "values": {"key": {"type": 4, "data": "42"}}}"#;
+        assert_eq!(
+            JsonV2Adapter::detect_format(cpp_json),
+            SerializationFormat::CppJson
+        );
 
         // Python JSON
-        let python_json = r#"{"message_type": "test", "values": [{"name": "key", "type": 4, "data": 42}]}"#;
-        assert_eq!(JsonV2Adapter::detect_format(python_json), SerializationFormat::PythonJson);
+        let python_json =
+            r#"{"message_type": "test", "values": [{"name": "key", "type": 4, "data": 42}]}"#;
+        assert_eq!(
+            JsonV2Adapter::detect_format(python_json),
+            SerializationFormat::PythonJson
+        );
 
         // Wire Protocol
         let wire = "@header={{[5,test];[6,1.0.0.0];}};@data={{[x,int_value,42];}};";
-        assert_eq!(JsonV2Adapter::detect_format(wire), SerializationFormat::WireProtocol);
+        assert_eq!(
+            JsonV2Adapter::detect_format(wire),
+            SerializationFormat::WireProtocol
+        );
     }
 
     #[test]
@@ -948,26 +1018,22 @@ mod tests {
         // Create a container and convert to different formats
         let mut container = ValueContainer::new();
         container.set_message_type("test");
-        container.add_value(Arc::new(IntValue::new("count", 42))).unwrap();
+        container
+            .add_value(Arc::new(IntValue::new("count", 42)))
+            .unwrap();
 
         let v2_json = JsonV2Adapter::to_v2_json(&container, false).unwrap();
 
         // Convert v2.0 to C++ format
-        let cpp_json = JsonV2Adapter::convert_format(
-            &v2_json,
-            SerializationFormat::CppJson,
-            false
-        ).unwrap();
+        let cpp_json =
+            JsonV2Adapter::convert_format(&v2_json, SerializationFormat::CppJson, false).unwrap();
 
         assert!(cpp_json.contains("\"header\""));
         assert!(cpp_json.contains("\"message_type\""));
 
         // Convert back to v2.0
-        let restored_v2 = JsonV2Adapter::convert_format(
-            &cpp_json,
-            SerializationFormat::JsonV2,
-            false
-        ).unwrap();
+        let restored_v2 =
+            JsonV2Adapter::convert_format(&cpp_json, SerializationFormat::JsonV2, false).unwrap();
 
         let restored = JsonV2Adapter::from_v2_json(&restored_v2).unwrap();
         assert_eq!(restored.message_type(), "test");
@@ -989,7 +1055,10 @@ mod tests {
         assert_eq!(restored.value_count(), 1);
 
         let nested_val = restored.get_value("nested").unwrap();
-        let container_val = nested_val.as_any().downcast_ref::<ContainerValue>().unwrap();
+        let container_val = nested_val
+            .as_any()
+            .downcast_ref::<ContainerValue>()
+            .unwrap();
         assert_eq!(container_val.child_count(), 2);
     }
 }

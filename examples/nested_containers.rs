@@ -29,6 +29,8 @@
 
 //! Example demonstrating nested containers (ContainerValue)
 
+#![allow(deprecated)]
+
 use rust_container_system::prelude::*;
 use std::sync::Arc;
 
@@ -61,8 +63,11 @@ fn simple_nested_example() {
         vec![child1, child2, child3],
     ));
 
-    println!("   Created container '{}' with {} children",
-        user_data.name(), user_data.child_count());
+    println!(
+        "   Created container '{}' with {} children",
+        user_data.name(),
+        user_data.child_count()
+    );
 
     // Access children
     if let Some(id_value) = user_data.get_child("id", 0) {
@@ -102,8 +107,10 @@ fn complex_nested_example() {
     ));
 
     // Create user statistics
-    let stats_login: Arc<dyn Value> = Arc::new(LongValue::new("login_count", 150).expect("Value out of range"));
-    let stats_messages: Arc<dyn Value> = Arc::new(LongValue::new("messages_sent", 1250).expect("Value out of range"));
+    let stats_login: Arc<dyn Value> =
+        Arc::new(LongValue::new("login_count", 150).expect("Value out of range"));
+    let stats_messages: Arc<dyn Value> =
+        Arc::new(LongValue::new("messages_sent", 1250).expect("Value out of range"));
     let stats_avg_time: Arc<dyn Value> = Arc::new(DoubleValue::new("avg_session_time", 23.5));
     let user_stats = Arc::new(ContainerValue::new(
         "statistics",
@@ -113,22 +120,24 @@ fn complex_nested_example() {
     // Create main user container with nested containers
     let user_container = Arc::new(ContainerValue::new(
         "user",
-        vec![
-            user_profile.clone(),
-            user_prefs.clone(),
-            user_stats.clone(),
-        ],
+        vec![user_profile.clone(), user_prefs.clone(), user_stats.clone()],
     ));
 
     println!("   Created hierarchical user structure:");
-    println!("   - Main container: {} ({} children)",
-        user_container.name(), user_container.child_count());
+    println!(
+        "   - Main container: {} ({} children)",
+        user_container.name(),
+        user_container.child_count()
+    );
 
     for child in user_container.children() {
         if child.is_container() {
             if let Some(nested) = child.as_any().downcast_ref::<ContainerValue>() {
-                println!("     - Nested container '{}': {} children",
-                    nested.name(), nested.child_count());
+                println!(
+                    "     - Nested container '{}': {} children",
+                    nested.name(),
+                    nested.child_count()
+                );
             }
         }
     }
@@ -169,19 +178,16 @@ fn serialization_example() {
     ));
 
     let outer_value: Arc<dyn Value> = Arc::new(StringValue::new("description", "outer level"));
-    let outer_container = ContainerValue::new(
-        "outer",
-        vec![inner_container.clone(), outer_value],
-    );
+    let outer_container = ContainerValue::new("outer", vec![inner_container.clone(), outer_value]);
 
     // Serialize to JSON
     println!("   JSON Serialization:");
     match outer_container.to_json() {
         Ok(json) => {
-            println!("   {}", json.lines()
-                .take(10)
-                .collect::<Vec<_>>()
-                .join("\n   "));
+            println!(
+                "   {}",
+                json.lines().take(10).collect::<Vec<_>>().join("\n   ")
+            );
             println!("   ... (truncated for display)");
         }
         Err(e) => println!("   Error: {}", e),
@@ -191,10 +197,10 @@ fn serialization_example() {
     println!("\n   XML Serialization:");
     match outer_container.to_xml() {
         Ok(xml) => {
-            println!("   {}", xml.lines()
-                .take(10)
-                .collect::<Vec<_>>()
-                .join("\n   "));
+            println!(
+                "   {}",
+                xml.lines().take(10).collect::<Vec<_>>().join("\n   ")
+            );
             println!("   ... (truncated for display)");
         }
         Err(e) => println!("   Error: {}", e),

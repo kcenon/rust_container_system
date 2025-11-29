@@ -253,7 +253,6 @@ impl fmt::Display for ValueType {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -38,31 +38,66 @@ use std::sync::Arc;
 
 /// Generate binary data for testing cross-language compatibility
 #[test]
+#[allow(clippy::approx_constant)]
 fn test_generate_rust_binary_data() {
     // Generate binary representations for various types
     // These hex strings can be used in Go/C++ tests
 
     let test_cases = vec![
-        ("Int32", Arc::new(IntValue::new("testi32", 42)) as Arc<dyn Value>),
-        ("Bool_True", Arc::new(BoolValue::new("bool_true", true)) as Arc<dyn Value>),
-        ("Bool_False", Arc::new(BoolValue::new("bool_false", false)) as Arc<dyn Value>),
-        ("String", Arc::new(StringValue::new("mystr", "Hello, World!")) as Arc<dyn Value>),
-        ("Int64", Arc::new(LLongValue::new("i64", -9876543210)) as Arc<dyn Value>),
-        ("Float", Arc::new(FloatValue::new("f32", 3.14159)) as Arc<dyn Value>),
-        ("Double", Arc::new(DoubleValue::new("f64", 2.71828182845)) as Arc<dyn Value>),
-        ("Bytes", Arc::new(BytesValue::new("bytes", vec![0xDE, 0xAD, 0xBE, 0xEF])) as Arc<dyn Value>),
+        (
+            "Int32",
+            Arc::new(IntValue::new("testi32", 42)) as Arc<dyn Value>,
+        ),
+        (
+            "Bool_True",
+            Arc::new(BoolValue::new("bool_true", true)) as Arc<dyn Value>,
+        ),
+        (
+            "Bool_False",
+            Arc::new(BoolValue::new("bool_false", false)) as Arc<dyn Value>,
+        ),
+        (
+            "String",
+            Arc::new(StringValue::new("mystr", "Hello, World!")) as Arc<dyn Value>,
+        ),
+        (
+            "Int64",
+            Arc::new(LLongValue::new("i64", -9876543210)) as Arc<dyn Value>,
+        ),
+        (
+            "Float",
+            Arc::new(FloatValue::new("f32", 3.14159)) as Arc<dyn Value>,
+        ),
+        (
+            "Double",
+            Arc::new(DoubleValue::new("f64", 2.71828182845)) as Arc<dyn Value>,
+        ),
+        (
+            "Bytes",
+            Arc::new(BytesValue::new("bytes", vec![0xDE, 0xAD, 0xBE, 0xEF])) as Arc<dyn Value>,
+        ),
     ];
 
     println!("\n=== Rust Binary Data for Cross-Language Testing ===\n");
 
     for (name, value) in test_cases {
         let binary = value.to_bytes();
-        let hex_string = binary.iter()
+        let hex_string = binary
+            .iter()
             .map(|b| format!("{:02x}", b))
             .collect::<String>();
 
-        println!("// {} (type={:?}, name={})", name, value.value_type(), value.name());
-        println!("const RUST_{}:  &str = \"{}\";", name.to_uppercase(), hex_string);
+        println!(
+            "// {} (type={:?}, name={})",
+            name,
+            value.value_type(),
+            value.name()
+        );
+        println!(
+            "const RUST_{}:  &str = \"{}\";",
+            name.to_uppercase(),
+            hex_string
+        );
         println!("// Length: {} bytes\n", binary.len());
     }
 }
@@ -79,10 +114,22 @@ fn test_binary_roundtrip_all_types() {
         ("Int_Pos", Arc::new(IntValue::new("i32_pos", 2147483647))),
         ("Int_Neg", Arc::new(IntValue::new("i32_neg", -2147483648))),
         ("String_Empty", Arc::new(StringValue::new("s_empty", ""))),
-        ("String_ASCII", Arc::new(StringValue::new("s_ascii", "Hello, World!"))),
-        ("String_UTF8", Arc::new(StringValue::new("s_utf8", "안녕하세요 🌍"))),
+        (
+            "String_ASCII",
+            Arc::new(StringValue::new("s_ascii", "Hello, World!")),
+        ),
+        (
+            "String_UTF8",
+            Arc::new(StringValue::new("s_utf8", "안녕하세요 🌍")),
+        ),
         ("Bytes_Empty", Arc::new(BytesValue::new("b_empty", vec![]))),
-        ("Bytes_Data", Arc::new(BytesValue::new("b_data", vec![0x00, 0xFF, 0xDE, 0xAD, 0xBE, 0xEF]))),
+        (
+            "Bytes_Data",
+            Arc::new(BytesValue::new(
+                "b_data",
+                vec![0x00, 0xFF, 0xDE, 0xAD, 0xBE, 0xEF],
+            )),
+        ),
     ];
 
     for (name, value) in test_cases {
@@ -93,11 +140,21 @@ fn test_binary_roundtrip_all_types() {
         assert!(binary.len() >= 10, "{}: binary too short", name);
 
         // Verify type byte
-        assert_eq!(binary[0], value.value_type() as u8, "{}: type byte mismatch", name);
+        assert_eq!(
+            binary[0],
+            value.value_type() as u8,
+            "{}: type byte mismatch",
+            name
+        );
 
         // Verify name length (4 bytes LE)
         let name_len = u32::from_le_bytes([binary[1], binary[2], binary[3], binary[4]]) as usize;
-        assert_eq!(name_len, value.name().len(), "{}: name length mismatch", name);
+        assert_eq!(
+            name_len,
+            value.name().len(),
+            "{}: name length mismatch",
+            name
+        );
 
         // Verify name
         let name_bytes = &binary[5..5 + name_len];
@@ -106,9 +163,17 @@ fn test_binary_roundtrip_all_types() {
 
         // Verify value_size field exists
         let value_size_offset = 5 + name_len;
-        assert!(value_size_offset + 4 <= binary.len(), "{}: value_size missing", name);
+        assert!(
+            value_size_offset + 4 <= binary.len(),
+            "{}: value_size missing",
+            name
+        );
 
-        println!("✓ {}: binary format verified ({} bytes)", name, binary.len());
+        println!(
+            "✓ {}: binary format verified ({} bytes)",
+            name,
+            binary.len()
+        );
     }
 }
 
@@ -158,7 +223,13 @@ fn test_binary_format_structure() {
 
     println!("✓ Binary format structure verified");
     println!("  Total size: {} bytes", binary.len());
-    println!("  Hex: {}", binary.iter().map(|b| format!("{:02x}", b)).collect::<String>());
+    println!(
+        "  Hex: {}",
+        binary
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect::<String>()
+    );
 }
 
 /// Test cross-language ArrayValue compatibility
@@ -176,7 +247,11 @@ fn test_array_value_binary_format() {
     let binary = array.to_binary_bytes();
 
     // Verify format
-    assert_eq!(binary[0], ValueType::Array as u8, "Type should be Array (0x0F)");
+    assert_eq!(
+        binary[0],
+        ValueType::Array as u8,
+        "Type should be Array (0x0F)"
+    );
 
     // Deserialize
     let restored = ArrayValue::deserialize_binary(&binary).unwrap();
