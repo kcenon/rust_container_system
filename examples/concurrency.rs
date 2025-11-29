@@ -128,10 +128,7 @@ fn producer_consumer_example() {
                 .map(|v| v.to_string())
                 .unwrap_or_default();
 
-            println!(
-                "  Consumer: received packet {} with data '{}'",
-                seq, data
-            );
+            println!("  Consumer: received packet {} with data '{}'", seq, data);
             count += 1;
         }
         println!("  Consumer: processed {} packets total", count);

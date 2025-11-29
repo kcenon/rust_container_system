@@ -100,16 +100,15 @@ fn test_xml_injection_prevention() {
     let mut container = ValueContainer::new();
 
     // Attempt XML injection in header
-    container.set_source(
-        "<malicious><inject>evil</inject></malicious>",
-        "test"
-    );
+    container.set_source("<malicious><inject>evil</inject></malicious>", "test");
 
     // Attempt XSS in value
-    container.add_value(Arc::new(StringValue::new(
-        "user_input",
-        "<script>alert('xss')</script>"
-    ))).unwrap();
+    container
+        .add_value(Arc::new(StringValue::new(
+            "user_input",
+            "<script>alert('xss')</script>",
+        )))
+        .unwrap();
 
     let xml = container.to_xml().expect("Failed to serialize");
 
@@ -130,9 +129,15 @@ fn test_json_serialization() {
     container.set_target("client", "user1");
     container.set_message_type("user_action");
 
-    container.add_value(Arc::new(IntValue::new("user_id", 12345))).unwrap();
-    container.add_value(Arc::new(StringValue::new("action", "login"))).unwrap();
-    container.add_value(Arc::new(BoolValue::new("success", true))).unwrap();
+    container
+        .add_value(Arc::new(IntValue::new("user_id", 12345)))
+        .unwrap();
+    container
+        .add_value(Arc::new(StringValue::new("action", "login")))
+        .unwrap();
+    container
+        .add_value(Arc::new(BoolValue::new("success", true)))
+        .unwrap();
 
     let json = container.to_json().expect("Failed to serialize");
 
@@ -148,7 +153,9 @@ fn test_json_serialization() {
 fn test_deep_copy_vs_shallow_copy() {
     let mut original = ValueContainer::new();
     original.set_source("source", "sub");
-    original.add_value(Arc::new(IntValue::new("key", 42))).unwrap();
+    original
+        .add_value(Arc::new(IntValue::new("key", 42)))
+        .unwrap();
 
     // Deep copy (with values)
     let deep_copy = original.copy(true);
@@ -181,9 +188,15 @@ fn test_multiple_values_same_name() {
     let mut container = ValueContainer::new();
 
     // Add multiple values with same name
-    container.add_value(Arc::new(IntValue::new("count", 1))).unwrap();
-    container.add_value(Arc::new(IntValue::new("count", 2))).unwrap();
-    container.add_value(Arc::new(IntValue::new("count", 3))).unwrap();
+    container
+        .add_value(Arc::new(IntValue::new("count", 1)))
+        .unwrap();
+    container
+        .add_value(Arc::new(IntValue::new("count", 2)))
+        .unwrap();
+    container
+        .add_value(Arc::new(IntValue::new("count", 3)))
+        .unwrap();
 
     // Get array should return all
     let values = container.get_value_array("count");
@@ -208,9 +221,7 @@ fn test_clone_free_access() {
     assert_eq!(length, "test_source".len());
 
     // Verify no unnecessary cloning
-    let result = container.with_message_type_ref(|msg_type| {
-        msg_type.to_uppercase()
-    });
+    let result = container.with_message_type_ref(|msg_type| msg_type.to_uppercase());
     assert_eq!(result, "DATA_CONTAINER");
 }
 
@@ -221,7 +232,9 @@ fn test_clear_values_preserves_header() {
     container.set_target("target", "sub");
     container.set_message_type("test");
 
-    container.add_value(Arc::new(IntValue::new("key", 42))).unwrap();
+    container
+        .add_value(Arc::new(IntValue::new("key", 42)))
+        .unwrap();
     assert_eq!(container.value_count(), 1);
 
     // Clear values
@@ -308,7 +321,9 @@ fn test_bytes_value() {
     let mut container = ValueContainer::new();
 
     let data = vec![1u8, 2, 3, 4, 5];
-    container.add_value(Arc::new(BytesValue::new("binary", data.clone()))).unwrap();
+    container
+        .add_value(Arc::new(BytesValue::new("binary", data.clone())))
+        .unwrap();
 
     let retrieved = container.get_value("binary").expect("Value not found");
     assert_eq!(retrieved.name(), "binary");
@@ -318,16 +333,26 @@ fn test_bytes_value() {
 fn test_all_primitive_types() {
     let mut container = ValueContainer::new();
 
-    container.add_value(Arc::new(BoolValue::new("bool", true))).unwrap();
+    container
+        .add_value(Arc::new(BoolValue::new("bool", true)))
+        .unwrap();
     // NOTE: CharValue, ByteValue, ShortValue, FloatValue are not yet implemented
     // container.add_value(Arc::new(CharValue::new("char", 'A'))).unwrap();
     // container.add_value(Arc::new(ByteValue::new("byte", 255))).unwrap();
     // container.add_value(Arc::new(ShortValue::new("short", 1000))).unwrap();
-    container.add_value(Arc::new(IntValue::new("int", 100000))).unwrap();
-    container.add_value(Arc::new(LongValue::new("long", 1000000000).unwrap())).unwrap();
+    container
+        .add_value(Arc::new(IntValue::new("int", 100000)))
+        .unwrap();
+    container
+        .add_value(Arc::new(LongValue::new("long", 1000000000).unwrap()))
+        .unwrap();
     // container.add_value(Arc::new(FloatValue::new("float", 3.14))).unwrap();
-    container.add_value(Arc::new(DoubleValue::new("double", std::f64::consts::E))).unwrap();
-    container.add_value(Arc::new(StringValue::new("string", "hello"))).unwrap();
+    container
+        .add_value(Arc::new(DoubleValue::new("double", std::f64::consts::E)))
+        .unwrap();
+    container
+        .add_value(Arc::new(StringValue::new("string", "hello")))
+        .unwrap();
 
     // Updated to reflect only implemented types: Bool, Int, Long, Double, String
     assert_eq!(container.value_count(), 5);
@@ -351,8 +376,12 @@ fn test_serialization_round_trip() {
     original.set_target("receiver", "app2");
     original.set_message_type("data");
 
-    original.add_value(Arc::new(IntValue::new("id", 123))).unwrap();
-    original.add_value(Arc::new(StringValue::new("name", "test"))).unwrap();
+    original
+        .add_value(Arc::new(IntValue::new("id", 123)))
+        .unwrap();
+    original
+        .add_value(Arc::new(StringValue::new("name", "test")))
+        .unwrap();
 
     // Serialize
     let bytes = original.serialize().expect("Failed to serialize");

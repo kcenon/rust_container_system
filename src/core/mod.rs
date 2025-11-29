@@ -68,6 +68,9 @@ pub mod wire_protocol;
 /// JSON v2.0 adapter for cross-language compatibility
 pub mod json_v2_adapter;
 
+/// Domain-agnostic value storage (separate from messaging-specific container)
+pub mod value_store;
+
 /// Re-export error types
 ///
 /// ```rust
@@ -128,7 +131,22 @@ pub use value_types::ValueType;
 /// // Or create with custom limit
 /// let limited = ValueContainer::with_max_values(1000);
 /// ```
-pub use container::{ValueContainer, ValueContainerBuilder, ValueIter, DEFAULT_MAX_VALUES, ABSOLUTE_MAX_VALUES};
+pub use container::{
+    ValueContainer, ValueContainerBuilder, ValueIter, ABSOLUTE_MAX_VALUES, DEFAULT_MAX_VALUES,
+};
+
+/// Re-export ValueStore for domain-agnostic value storage
+///
+/// ```rust
+/// use rust_container_system::core::ValueStore;
+/// use rust_container_system::values::IntValue;
+/// use std::sync::Arc;
+///
+/// let store = ValueStore::new();
+/// store.add("count".to_string(), Arc::new(IntValue::new("count", 42)));
+/// assert_eq!(store.size(), 1);
+/// ```
+pub use value_store::ValueStore;
 
 /// XML escape utility function to prevent XML injection attacks
 ///

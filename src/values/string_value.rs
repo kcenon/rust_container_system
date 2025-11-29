@@ -30,7 +30,7 @@
 //! UTF-8 string value implementation.
 //!
 //! This module provides [`StringValue`], a type-safe container for UTF-8 encoded
-//! string data. It implements the [`Value`] trait for seamless integration with
+//! string data. It implements the [`crate::core::Value`] trait for seamless integration with
 //! the container system.
 //!
 //! # Features
@@ -220,7 +220,10 @@ impl Value for StringValue {
     }
 
     fn to_xml(&self) -> Result<String> {
-        Ok(format!("<string>{}</string>", crate::core::xml_escape(&self.value)))
+        Ok(format!(
+            "<string>{}</string>",
+            crate::core::xml_escape(&self.value)
+        ))
     }
 
     fn clone_value(&self) -> Arc<dyn Value> {

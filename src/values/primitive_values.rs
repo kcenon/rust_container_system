@@ -230,7 +230,10 @@ impl Value for BoolValue {
     }
 
     fn to_xml(&self) -> Result<String> {
-        Ok(format!("<bool>{}</bool>", crate::core::xml_escape(&self.value.to_string())))
+        Ok(format!(
+            "<bool>{}</bool>",
+            crate::core::xml_escape(&self.value.to_string())
+        ))
     }
 
     fn clone_value(&self) -> Arc<dyn Value> {
@@ -388,7 +391,10 @@ impl Value for IntValue {
     }
 
     fn to_xml(&self) -> Result<String> {
-        Ok(format!("<int>{}</int>", crate::core::xml_escape(&self.value.to_string())))
+        Ok(format!(
+            "<int>{}</int>",
+            crate::core::xml_escape(&self.value.to_string())
+        ))
     }
 
     fn clone_value(&self) -> Arc<dyn Value> {
@@ -412,11 +418,9 @@ pub struct LongValue {
 
 impl LongValue {
     pub fn new(name: impl Into<String>, value: i64) -> Result<Self> {
-        let val32 = i32::try_from(value).map_err(|_| {
-            ContainerError::InvalidTypeConversion {
-                from: format!("i64({})", value),
-                to: "i32 (long_value, type 6)".to_string(),
-            }
+        let val32 = i32::try_from(value).map_err(|_| ContainerError::InvalidTypeConversion {
+            from: format!("i64({})", value),
+            to: "i32 (long_value, type 6)".to_string(),
         })?;
         Ok(Self {
             name: name.into(),
@@ -439,7 +443,7 @@ impl Value for LongValue {
     }
 
     fn size(&self) -> usize {
-        4  // Always 4 bytes
+        4 // Always 4 bytes
     }
 
     fn to_long(&self) -> Result<i64> {
@@ -498,7 +502,10 @@ impl Value for LongValue {
     }
 
     fn to_xml(&self) -> Result<String> {
-        Ok(format!("<long>{}</long>", crate::core::xml_escape(&self.value.to_string())))
+        Ok(format!(
+            "<long>{}</long>",
+            crate::core::xml_escape(&self.value.to_string())
+        ))
     }
 
     fn clone_value(&self) -> Arc<dyn Value> {
@@ -582,7 +589,10 @@ impl Value for LLongValue {
     }
 
     fn to_xml(&self) -> Result<String> {
-        Ok(format!("<llong>{}</llong>", crate::core::xml_escape(&self.value.to_string())))
+        Ok(format!(
+            "<llong>{}</llong>",
+            crate::core::xml_escape(&self.value.to_string())
+        ))
     }
 
     fn clone_value(&self) -> Arc<dyn Value> {
@@ -660,7 +670,10 @@ impl Value for ShortValue {
     }
 
     fn to_xml(&self) -> Result<String> {
-        Ok(format!("<short>{}</short>", crate::core::xml_escape(&self.value.to_string())))
+        Ok(format!(
+            "<short>{}</short>",
+            crate::core::xml_escape(&self.value.to_string())
+        ))
     }
 
     fn clone_value(&self) -> Arc<dyn Value> {
@@ -738,7 +751,10 @@ impl Value for UShortValue {
     }
 
     fn to_xml(&self) -> Result<String> {
-        Ok(format!("<ushort>{}</ushort>", crate::core::xml_escape(&self.value.to_string())))
+        Ok(format!(
+            "<ushort>{}</ushort>",
+            crate::core::xml_escape(&self.value.to_string())
+        ))
     }
 
     fn clone_value(&self) -> Arc<dyn Value> {
@@ -821,7 +837,10 @@ impl Value for UIntValue {
     }
 
     fn to_xml(&self) -> Result<String> {
-        Ok(format!("<uint>{}</uint>", crate::core::xml_escape(&self.value.to_string())))
+        Ok(format!(
+            "<uint>{}</uint>",
+            crate::core::xml_escape(&self.value.to_string())
+        ))
     }
 
     fn clone_value(&self) -> Arc<dyn Value> {
@@ -845,11 +864,9 @@ pub struct ULongValue {
 
 impl ULongValue {
     pub fn new(name: impl Into<String>, value: u64) -> Result<Self> {
-        let val32 = u32::try_from(value).map_err(|_| {
-            ContainerError::InvalidTypeConversion {
-                from: format!("u64({})", value),
-                to: "u32 (ulong_value, type 7)".to_string(),
-            }
+        let val32 = u32::try_from(value).map_err(|_| ContainerError::InvalidTypeConversion {
+            from: format!("u64({})", value),
+            to: "u32 (ulong_value, type 7)".to_string(),
         })?;
         Ok(Self {
             name: name.into(),
@@ -872,7 +889,7 @@ impl Value for ULongValue {
     }
 
     fn size(&self) -> usize {
-        4  // Always 4 bytes
+        4 // Always 4 bytes
     }
 
     fn to_int(&self) -> Result<i32> {
@@ -913,7 +930,10 @@ impl Value for ULongValue {
     }
 
     fn to_xml(&self) -> Result<String> {
-        Ok(format!("<ulong>{}</ulong>", crate::core::xml_escape(&self.value.to_string())))
+        Ok(format!(
+            "<ulong>{}</ulong>",
+            crate::core::xml_escape(&self.value.to_string())
+        ))
     }
 
     fn clone_value(&self) -> Arc<dyn Value> {
@@ -1002,7 +1022,10 @@ impl Value for ULLongValue {
     }
 
     fn to_xml(&self) -> Result<String> {
-        Ok(format!("<ullong>{}</ullong>", crate::core::xml_escape(&self.value.to_string())))
+        Ok(format!(
+            "<ullong>{}</ullong>",
+            crate::core::xml_escape(&self.value.to_string())
+        ))
     }
 
     fn clone_value(&self) -> Arc<dyn Value> {
@@ -1131,7 +1154,10 @@ impl Value for FloatValue {
     }
 
     fn to_xml(&self) -> Result<String> {
-        Ok(format!("<float>{}</float>", crate::core::xml_escape(&self.value.to_string())))
+        Ok(format!(
+            "<float>{}</float>",
+            crate::core::xml_escape(&self.value.to_string())
+        ))
     }
 
     fn clone_value(&self) -> Arc<dyn Value> {
@@ -1325,7 +1351,10 @@ impl Value for DoubleValue {
     }
 
     fn to_xml(&self) -> Result<String> {
-        Ok(format!("<double>{}</double>", crate::core::xml_escape(&self.value.to_string())))
+        Ok(format!(
+            "<double>{}</double>",
+            crate::core::xml_escape(&self.value.to_string())
+        ))
     }
 
     fn clone_value(&self) -> Arc<dyn Value> {

@@ -265,24 +265,18 @@ impl ValueContainer {
 
         // Check value limit to prevent memory exhaustion
         if inner.values.len() >= inner.max_values {
-            return Err(crate::core::ContainerError::InvalidDataFormat(
-                format!(
-                    "Container value limit reached ({}/{})",
-                    inner.values.len(),
-                    inner.max_values
-                )
-            ));
+            return Err(crate::core::ContainerError::InvalidDataFormat(format!(
+                "Container value limit reached ({}/{})",
+                inner.values.len(),
+                inner.max_values
+            )));
         }
 
         let name = value.name().to_string();
 
         // Store in both Vec and HashMap for dual access patterns
         inner.values.push(Arc::clone(&value));
-        inner
-            .value_map
-            .entry(name)
-            .or_default()
-            .push(value);
+        inner.value_map.entry(name).or_default().push(value);
 
         Ok(())
     }
@@ -306,11 +300,7 @@ impl ValueContainer {
     /// Get all values with the specified name
     pub fn get_value_array(&self, name: &str) -> Vec<Arc<dyn Value>> {
         let inner = self.inner.read();
-        inner
-            .value_map
-            .get(name)
-            .cloned()
-            .unwrap_or_default()
+        inner.value_map.get(name).cloned().unwrap_or_default()
     }
 
     /// Zero-copy access to values with the specified name via callback
@@ -374,15 +364,13 @@ impl ValueContainer {
         if let Some(removed_values) = inner.value_map.shift_remove(name) {
             // Build HashSet of pointers to remove - O(m) where m is number of values with this name
             use std::collections::HashSet;
-            let removed_ptrs: HashSet<*const dyn Value> = removed_values
-                .iter()
-                .map(Arc::as_ptr)
-                .collect();
+            let removed_ptrs: HashSet<*const dyn Value> =
+                removed_values.iter().map(Arc::as_ptr).collect();
 
             // Remove from Vec by filtering with HashSet lookup - O(n) single pass
-            inner.values.retain(|value| {
-                !removed_ptrs.contains(&Arc::as_ptr(value))
-            });
+            inner
+                .values
+                .retain(|value| !removed_ptrs.contains(&Arc::as_ptr(value)));
             true
         } else {
             false
@@ -416,7 +404,8 @@ impl ValueContainer {
         let inner = self.inner.read();
         let new_inner = if including_values {
             // Clone all values
-            let cloned_values: Vec<Arc<dyn Value>> = inner.values.iter().map(|v| v.clone_value()).collect();
+            let cloned_values: Vec<Arc<dyn Value>> =
+                inner.values.iter().map(|v| v.clone_value()).collect();
 
             // Rebuild value_map from freshly cloned values to avoid sharing Arc refs
             let mut new_value_map: IndexMap<String, Vec<Arc<dyn Value>>> = IndexMap::new();
@@ -477,7 +466,9 @@ impl ValueContainer {
         // Log deprecation warning
         eprintln!("WARNING: to_json() is deprecated and will be removed in v2.0.0 (July 2025).");
         eprintln!("         Use serialize_cpp_wire() for cross-language compatibility.");
-        eprintln!("         See: https://github.com/kcenon/container_system/blob/main/MIGRATION_GUIDE.md");
+        eprintln!(
+            "         See: https://github.com/kcenon/container_system/blob/main/MIGRATION_GUIDE.md"
+        );
 
         let inner = self.inner.read();
         let mut json_obj = serde_json::json!({
@@ -506,7 +497,7 @@ impl ValueContainer {
             }
         } else {
             return Err(crate::core::ContainerError::InvalidDataFormat(
-                "Failed to access values array in JSON object".to_string()
+                "Failed to access values array in JSON object".to_string(),
             ));
         }
 
@@ -533,7 +524,9 @@ impl ValueContainer {
         // Log deprecation warning
         eprintln!("WARNING: to_xml() is deprecated and will be removed in v2.0.0 (July 2025).");
         eprintln!("         Use serialize_cpp_wire() for cross-language compatibility.");
-        eprintln!("         See: https://github.com/kcenon/container_system/blob/main/MIGRATION_GUIDE.md");
+        eprintln!(
+            "         See: https://github.com/kcenon/container_system/blob/main/MIGRATION_GUIDE.md"
+        );
 
         use std::fmt::Write;
 
@@ -549,18 +542,54 @@ impl ValueContainer {
         xml.push_str("  <header>\n");
 
         // Use writeln!() instead of format!() + push_str() to avoid intermediate allocations
-        writeln!(&mut xml, "    <source_id>{}</source_id>", Self::xml_escape(&inner.source_id))
-            .map_err(|e| crate::core::ContainerError::InvalidDataFormat(format!("XML write error: {}", e)))?;
-        writeln!(&mut xml, "    <source_sub_id>{}</source_sub_id>", Self::xml_escape(&inner.source_sub_id))
-            .map_err(|e| crate::core::ContainerError::InvalidDataFormat(format!("XML write error: {}", e)))?;
-        writeln!(&mut xml, "    <target_id>{}</target_id>", Self::xml_escape(&inner.target_id))
-            .map_err(|e| crate::core::ContainerError::InvalidDataFormat(format!("XML write error: {}", e)))?;
-        writeln!(&mut xml, "    <target_sub_id>{}</target_sub_id>", Self::xml_escape(&inner.target_sub_id))
-            .map_err(|e| crate::core::ContainerError::InvalidDataFormat(format!("XML write error: {}", e)))?;
-        writeln!(&mut xml, "    <message_type>{}</message_type>", Self::xml_escape(&inner.message_type))
-            .map_err(|e| crate::core::ContainerError::InvalidDataFormat(format!("XML write error: {}", e)))?;
-        writeln!(&mut xml, "    <version>{}</version>", Self::xml_escape(&inner.version))
-            .map_err(|e| crate::core::ContainerError::InvalidDataFormat(format!("XML write error: {}", e)))?;
+        writeln!(
+            &mut xml,
+            "    <source_id>{}</source_id>",
+            Self::xml_escape(&inner.source_id)
+        )
+        .map_err(|e| {
+            crate::core::ContainerError::InvalidDataFormat(format!("XML write error: {}", e))
+        })?;
+        writeln!(
+            &mut xml,
+            "    <source_sub_id>{}</source_sub_id>",
+            Self::xml_escape(&inner.source_sub_id)
+        )
+        .map_err(|e| {
+            crate::core::ContainerError::InvalidDataFormat(format!("XML write error: {}", e))
+        })?;
+        writeln!(
+            &mut xml,
+            "    <target_id>{}</target_id>",
+            Self::xml_escape(&inner.target_id)
+        )
+        .map_err(|e| {
+            crate::core::ContainerError::InvalidDataFormat(format!("XML write error: {}", e))
+        })?;
+        writeln!(
+            &mut xml,
+            "    <target_sub_id>{}</target_sub_id>",
+            Self::xml_escape(&inner.target_sub_id)
+        )
+        .map_err(|e| {
+            crate::core::ContainerError::InvalidDataFormat(format!("XML write error: {}", e))
+        })?;
+        writeln!(
+            &mut xml,
+            "    <message_type>{}</message_type>",
+            Self::xml_escape(&inner.message_type)
+        )
+        .map_err(|e| {
+            crate::core::ContainerError::InvalidDataFormat(format!("XML write error: {}", e))
+        })?;
+        writeln!(
+            &mut xml,
+            "    <version>{}</version>",
+            Self::xml_escape(&inner.version)
+        )
+        .map_err(|e| {
+            crate::core::ContainerError::InvalidDataFormat(format!("XML write error: {}", e))
+        })?;
 
         xml.push_str("  </header>\n");
         xml.push_str("  <values>\n");
@@ -586,8 +615,11 @@ impl ValueContainer {
                 "    <value name=\"{}\" type=\"{}\">{}</value>",
                 Self::xml_escape(value.name()),
                 type_tag,
-                content  // Already escaped by value.to_xml()
-            ).map_err(|e| crate::core::ContainerError::InvalidDataFormat(format!("XML write error: {}", e)))?;
+                content // Already escaped by value.to_xml()
+            )
+            .map_err(|e| {
+                crate::core::ContainerError::InvalidDataFormat(format!("XML write error: {}", e))
+            })?;
         }
 
         xml.push_str("  </values>\n");
@@ -646,18 +678,12 @@ impl ValueContainer {
         let json_value: serde_json::Value = serde_json::from_str(json_str)?;
 
         // Extract header fields
-        let source_id = json_value["source_id"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let source_id = json_value["source_id"].as_str().unwrap_or("").to_string();
         let source_sub_id = json_value["source_sub_id"]
             .as_str()
             .unwrap_or("")
             .to_string();
-        let target_id = json_value["target_id"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let target_id = json_value["target_id"].as_str().unwrap_or("").to_string();
         let target_sub_id = json_value["target_sub_id"]
             .as_str()
             .unwrap_or("")
@@ -684,24 +710,27 @@ impl ValueContainer {
         // Parse values array
         if let Some(values_array) = json_value["values"].as_array() {
             for value_obj in values_array {
-                let name = value_obj["name"]
-                    .as_str()
-                    .ok_or_else(|| crate::core::ContainerError::InvalidDataFormat(
-                        "Missing 'name' field in value".to_string()
-                    ))?;
-                let value_type_str = value_obj["type"]
-                    .as_str()
-                    .ok_or_else(|| crate::core::ContainerError::InvalidDataFormat(
-                        "Missing 'type' field in value".to_string()
-                    ))?;
+                let name = value_obj["name"].as_str().ok_or_else(|| {
+                    crate::core::ContainerError::InvalidDataFormat(
+                        "Missing 'name' field in value".to_string(),
+                    )
+                })?;
+                let value_type_str = value_obj["type"].as_str().ok_or_else(|| {
+                    crate::core::ContainerError::InvalidDataFormat(
+                        "Missing 'type' field in value".to_string(),
+                    )
+                })?;
                 let value_data_obj = &value_obj["value"];
 
                 // Parse ValueType from type code (numeric strings like "1", "4", "13")
                 // or from string names (for backward compatibility)
                 let value_type = super::value_types::ValueType::from_type_code(value_type_str)
-                    .ok_or_else(|| crate::core::ContainerError::InvalidDataFormat(
-                        format!("Unknown value type code: '{}'", value_type_str)
-                    ))?;
+                    .ok_or_else(|| {
+                        crate::core::ContainerError::InvalidDataFormat(format!(
+                            "Unknown value type code: '{}'",
+                            value_type_str
+                        ))
+                    })?;
 
                 // Extract the actual value from nested structure
                 // Each value has its own to_json() that creates {"type": "...", "value": actual_value}
@@ -710,109 +739,140 @@ impl ValueContainer {
                 // Parse value based on type
                 let parsed_value: Arc<dyn Value> = match value_type {
                     super::value_types::ValueType::Bool => {
-                        let val = value_data.as_bool()
-                            .ok_or_else(|| crate::core::ContainerError::InvalidDataFormat(
-                                format!("Invalid bool value for '{}'", name)
-                            ))?;
+                        let val = value_data.as_bool().ok_or_else(|| {
+                            crate::core::ContainerError::InvalidDataFormat(format!(
+                                "Invalid bool value for '{}'",
+                                name
+                            ))
+                        })?;
                         Arc::new(BoolValue::new(name, val))
                     }
                     super::value_types::ValueType::Short => {
-                        let val = value_data.as_i64()
-                            .ok_or_else(|| crate::core::ContainerError::InvalidDataFormat(
-                                format!("Invalid short value for '{}'", name)
-                            ))? as i16;
+                        let val = value_data.as_i64().ok_or_else(|| {
+                            crate::core::ContainerError::InvalidDataFormat(format!(
+                                "Invalid short value for '{}'",
+                                name
+                            ))
+                        })? as i16;
                         Arc::new(ShortValue::new(name, val))
                     }
                     super::value_types::ValueType::UShort => {
-                        let val = value_data.as_u64()
-                            .ok_or_else(|| crate::core::ContainerError::InvalidDataFormat(
-                                format!("Invalid ushort value for '{}'", name)
-                            ))? as u16;
+                        let val = value_data.as_u64().ok_or_else(|| {
+                            crate::core::ContainerError::InvalidDataFormat(format!(
+                                "Invalid ushort value for '{}'",
+                                name
+                            ))
+                        })? as u16;
                         Arc::new(UShortValue::new(name, val))
                     }
                     super::value_types::ValueType::Int => {
-                        let val = value_data.as_i64()
-                            .ok_or_else(|| crate::core::ContainerError::InvalidDataFormat(
-                                format!("Invalid int value for '{}'", name)
-                            ))? as i32;
+                        let val = value_data.as_i64().ok_or_else(|| {
+                            crate::core::ContainerError::InvalidDataFormat(format!(
+                                "Invalid int value for '{}'",
+                                name
+                            ))
+                        })? as i32;
                         Arc::new(IntValue::new(name, val))
                     }
                     super::value_types::ValueType::UInt => {
-                        let val = value_data.as_u64()
-                            .ok_or_else(|| crate::core::ContainerError::InvalidDataFormat(
-                                format!("Invalid uint value for '{}'", name)
-                            ))? as u32;
+                        let val = value_data.as_u64().ok_or_else(|| {
+                            crate::core::ContainerError::InvalidDataFormat(format!(
+                                "Invalid uint value for '{}'",
+                                name
+                            ))
+                        })? as u32;
                         Arc::new(UIntValue::new(name, val))
                     }
                     super::value_types::ValueType::Long => {
-                        let val = value_data.as_i64()
-                            .ok_or_else(|| crate::core::ContainerError::InvalidDataFormat(
-                                format!("Invalid long value for '{}'", name)
-                            ))?;
+                        let val = value_data.as_i64().ok_or_else(|| {
+                            crate::core::ContainerError::InvalidDataFormat(format!(
+                                "Invalid long value for '{}'",
+                                name
+                            ))
+                        })?;
                         Arc::new(LongValue::new(name, val)?)
                     }
                     super::value_types::ValueType::LLong => {
-                        let val = value_data.as_i64()
-                            .ok_or_else(|| crate::core::ContainerError::InvalidDataFormat(
-                                format!("Invalid llong value for '{}'", name)
-                            ))?;
+                        let val = value_data.as_i64().ok_or_else(|| {
+                            crate::core::ContainerError::InvalidDataFormat(format!(
+                                "Invalid llong value for '{}'",
+                                name
+                            ))
+                        })?;
                         Arc::new(LLongValue::new(name, val))
                     }
                     super::value_types::ValueType::ULong => {
-                        let val = value_data.as_u64()
-                            .ok_or_else(|| crate::core::ContainerError::InvalidDataFormat(
-                                format!("Invalid ulong value for '{}'", name)
-                            ))?;
+                        let val = value_data.as_u64().ok_or_else(|| {
+                            crate::core::ContainerError::InvalidDataFormat(format!(
+                                "Invalid ulong value for '{}'",
+                                name
+                            ))
+                        })?;
                         Arc::new(ULongValue::new(name, val)?)
                     }
                     super::value_types::ValueType::ULLong => {
-                        let val = value_data.as_u64()
-                            .ok_or_else(|| crate::core::ContainerError::InvalidDataFormat(
-                                format!("Invalid ullong value for '{}'", name)
-                            ))?;
+                        let val = value_data.as_u64().ok_or_else(|| {
+                            crate::core::ContainerError::InvalidDataFormat(format!(
+                                "Invalid ullong value for '{}'",
+                                name
+                            ))
+                        })?;
                         Arc::new(ULLongValue::new(name, val))
                     }
                     super::value_types::ValueType::Float => {
-                        let val = value_data.as_f64()
-                            .ok_or_else(|| crate::core::ContainerError::InvalidDataFormat(
-                                format!("Invalid float value for '{}'", name)
-                            ))? as f32;
+                        let val = value_data.as_f64().ok_or_else(|| {
+                            crate::core::ContainerError::InvalidDataFormat(format!(
+                                "Invalid float value for '{}'",
+                                name
+                            ))
+                        })? as f32;
                         Arc::new(FloatValue::new(name, val))
                     }
                     super::value_types::ValueType::Double => {
-                        let val = value_data.as_f64()
-                            .ok_or_else(|| crate::core::ContainerError::InvalidDataFormat(
-                                format!("Invalid double value for '{}'", name)
-                            ))?;
+                        let val = value_data.as_f64().ok_or_else(|| {
+                            crate::core::ContainerError::InvalidDataFormat(format!(
+                                "Invalid double value for '{}'",
+                                name
+                            ))
+                        })?;
                         Arc::new(DoubleValue::new(name, val))
                     }
                     super::value_types::ValueType::String => {
-                        let val = value_data.as_str()
-                            .ok_or_else(|| crate::core::ContainerError::InvalidDataFormat(
-                                format!("Invalid string value for '{}'", name)
-                            ))?;
+                        let val = value_data.as_str().ok_or_else(|| {
+                            crate::core::ContainerError::InvalidDataFormat(format!(
+                                "Invalid string value for '{}'",
+                                name
+                            ))
+                        })?;
                         Arc::new(StringValue::new(name, val))
                     }
                     super::value_types::ValueType::Bytes => {
                         // Bytes are stored as base64 in JSON
-                        let base64_str = value_data.as_str()
-                            .ok_or_else(|| crate::core::ContainerError::InvalidDataFormat(
-                                format!("Invalid bytes value for '{}'", name)
-                            ))?;
+                        let base64_str = value_data.as_str().ok_or_else(|| {
+                            crate::core::ContainerError::InvalidDataFormat(format!(
+                                "Invalid bytes value for '{}'",
+                                name
+                            ))
+                        })?;
 
                         // Decode base64
-                        use base64::{Engine as _, engine::general_purpose};
-                        let bytes = general_purpose::STANDARD.decode(base64_str)
-                            .map_err(|e| crate::core::ContainerError::InvalidDataFormat(
-                                format!("Failed to decode base64 for '{}': {}", name, e)
-                            ))?;
+                        use base64::{engine::general_purpose, Engine as _};
+                        let bytes = general_purpose::STANDARD.decode(base64_str).map_err(|e| {
+                            crate::core::ContainerError::InvalidDataFormat(format!(
+                                "Failed to decode base64 for '{}': {}",
+                                name, e
+                            ))
+                        })?;
 
                         Arc::new(BytesValue::new(name, bytes))
                     }
-                    super::value_types::ValueType::Null | super::value_types::ValueType::Container | super::value_types::ValueType::Array => {
-                        return Err(crate::core::ContainerError::InvalidDataFormat(
-                            format!("Unsupported value type for deserialization: {:?}", value_type)
-                        ));
+                    super::value_types::ValueType::Null
+                    | super::value_types::ValueType::Container
+                    | super::value_types::ValueType::Array => {
+                        return Err(crate::core::ContainerError::InvalidDataFormat(format!(
+                            "Unsupported value type for deserialization: {:?}",
+                            value_type
+                        )));
                     }
                 };
 
@@ -825,10 +885,12 @@ impl ValueContainer {
 
     /// Deserialize from bytes (currently uses JSON)
     pub fn deserialize(data: &[u8]) -> Result<Self> {
-        let json_str = std::str::from_utf8(data)
-            .map_err(|e| crate::core::ContainerError::InvalidDataFormat(
-                format!("Invalid UTF-8 in serialized data: {}", e)
-            ))?;
+        let json_str = std::str::from_utf8(data).map_err(|e| {
+            crate::core::ContainerError::InvalidDataFormat(format!(
+                "Invalid UTF-8 in serialized data: {}",
+                e
+            ))
+        })?;
         Self::from_json(json_str)
     }
 
@@ -1091,10 +1153,12 @@ mod tests {
     #[test]
     fn test_xml_special_chars() {
         let mut container = ValueContainer::new();
-        container.add_value(Arc::new(StringValue::new(
-            "test'name\"",
-            "value&with<special>chars"
-        ))).unwrap();
+        container
+            .add_value(Arc::new(StringValue::new(
+                "test'name\"",
+                "value&with<special>chars",
+            )))
+            .unwrap();
 
         let xml = container.to_xml().unwrap();
 
@@ -1112,9 +1176,15 @@ mod tests {
         let mut container = ValueContainer::with_max_values(3);
 
         // Add values up to the limit
-        assert!(container.add_value(Arc::new(StringValue::new("key1", "value1"))).is_ok());
-        assert!(container.add_value(Arc::new(StringValue::new("key2", "value2"))).is_ok());
-        assert!(container.add_value(Arc::new(StringValue::new("key3", "value3"))).is_ok());
+        assert!(container
+            .add_value(Arc::new(StringValue::new("key1", "value1")))
+            .is_ok());
+        assert!(container
+            .add_value(Arc::new(StringValue::new("key2", "value2")))
+            .is_ok());
+        assert!(container
+            .add_value(Arc::new(StringValue::new("key3", "value3")))
+            .is_ok());
 
         // Attempt to exceed limit
         let result = container.add_value(Arc::new(StringValue::new("key4", "value4")));
@@ -1127,7 +1197,9 @@ mod tests {
         // Remove a value and try again
         container.remove_value("key1");
         assert_eq!(container.value_count(), 2);
-        assert!(container.add_value(Arc::new(StringValue::new("key4", "value4"))).is_ok());
+        assert!(container
+            .add_value(Arc::new(StringValue::new("key4", "value4")))
+            .is_ok());
         assert_eq!(container.value_count(), 3);
     }
 
@@ -1163,18 +1235,27 @@ mod tests {
             .build();
 
         // Should be able to add values after building
-        assert!(container.add_value(Arc::new(StringValue::new("key", "value"))).is_ok());
+        assert!(container
+            .add_value(Arc::new(StringValue::new("key", "value")))
+            .is_ok());
         assert_eq!(container.value_count(), 1);
     }
 
     #[test]
     fn test_iterator() {
         let mut container = ValueContainer::new();
-        container.add_value(Arc::new(StringValue::new("a", "first"))).unwrap();
-        container.add_value(Arc::new(StringValue::new("b", "second"))).unwrap();
-        container.add_value(Arc::new(StringValue::new("c", "third"))).unwrap();
+        container
+            .add_value(Arc::new(StringValue::new("a", "first")))
+            .unwrap();
+        container
+            .add_value(Arc::new(StringValue::new("b", "second")))
+            .unwrap();
+        container
+            .add_value(Arc::new(StringValue::new("c", "third")))
+            .unwrap();
 
-        let names: Vec<String> = (&container).into_iter()
+        let names: Vec<String> = (&container)
+            .into_iter()
             .map(|v| v.name().to_string())
             .collect();
 
@@ -1185,7 +1266,9 @@ mod tests {
     fn test_iterator_size_hint() {
         let mut container = ValueContainer::new();
         for i in 0..5 {
-            container.add_value(Arc::new(StringValue::new(format!("val_{}", i), "test"))).unwrap();
+            container
+                .add_value(Arc::new(StringValue::new(format!("val_{}", i), "test")))
+                .unwrap();
         }
 
         let iter = (&container).into_iter();
@@ -1196,8 +1279,12 @@ mod tests {
     #[test]
     fn test_iterator_for_loop() {
         let mut container = ValueContainer::new();
-        container.add_value(Arc::new(StringValue::new("x", "1"))).unwrap();
-        container.add_value(Arc::new(StringValue::new("y", "2"))).unwrap();
+        container
+            .add_value(Arc::new(StringValue::new("x", "1")))
+            .unwrap();
+        container
+            .add_value(Arc::new(StringValue::new("y", "2")))
+            .unwrap();
 
         let mut count = 0;
         for _value in &container {
@@ -1214,8 +1301,12 @@ mod tests {
         original.set_source("sender", "session_1");
         original.set_target("receiver", "main");
         original.set_message_type("test_message");
-        original.add_value(Arc::new(IntValue::new("count", 42))).unwrap();
-        original.add_value(Arc::new(StringValue::new("name", "test"))).unwrap();
+        original
+            .add_value(Arc::new(IntValue::new("count", 42)))
+            .unwrap();
+        original
+            .add_value(Arc::new(StringValue::new("name", "test")))
+            .unwrap();
 
         // Serialize to JSON
         let json = original.to_json().unwrap();
@@ -1244,17 +1335,39 @@ mod tests {
     fn test_deserialization_all_types() {
         // Create container with all value types
         let mut original = ValueContainer::new();
-        original.add_value(Arc::new(BoolValue::new("flag", true))).unwrap();
-        original.add_value(Arc::new(ShortValue::new("s", 100i16))).unwrap();
-        original.add_value(Arc::new(UShortValue::new("us", 200u16))).unwrap();
-        original.add_value(Arc::new(IntValue::new("i", 1000))).unwrap();
-        original.add_value(Arc::new(UIntValue::new("ui", 2000u32))).unwrap();
-        original.add_value(Arc::new(LongValue::new("l", 100000i64).unwrap())).unwrap();
-        original.add_value(Arc::new(ULongValue::new("ul", 200000u64).unwrap())).unwrap();
-        original.add_value(Arc::new(FloatValue::new("f", std::f32::consts::PI))).unwrap();
-        original.add_value(Arc::new(DoubleValue::new("d", std::f64::consts::E))).unwrap();
-        original.add_value(Arc::new(StringValue::new("str", "hello"))).unwrap();
-        original.add_value(Arc::new(BytesValue::new("bytes", vec![0xFF, 0xFE, 0xFD]))).unwrap();
+        original
+            .add_value(Arc::new(BoolValue::new("flag", true)))
+            .unwrap();
+        original
+            .add_value(Arc::new(ShortValue::new("s", 100i16)))
+            .unwrap();
+        original
+            .add_value(Arc::new(UShortValue::new("us", 200u16)))
+            .unwrap();
+        original
+            .add_value(Arc::new(IntValue::new("i", 1000)))
+            .unwrap();
+        original
+            .add_value(Arc::new(UIntValue::new("ui", 2000u32)))
+            .unwrap();
+        original
+            .add_value(Arc::new(LongValue::new("l", 100000i64).unwrap()))
+            .unwrap();
+        original
+            .add_value(Arc::new(ULongValue::new("ul", 200000u64).unwrap()))
+            .unwrap();
+        original
+            .add_value(Arc::new(FloatValue::new("f", std::f32::consts::PI)))
+            .unwrap();
+        original
+            .add_value(Arc::new(DoubleValue::new("d", std::f64::consts::E)))
+            .unwrap();
+        original
+            .add_value(Arc::new(StringValue::new("str", "hello")))
+            .unwrap();
+        original
+            .add_value(Arc::new(BytesValue::new("bytes", vec![0xFF, 0xFE, 0xFD])))
+            .unwrap();
 
         // Round-trip through JSON
         let json = original.to_json().unwrap();
@@ -1270,8 +1383,14 @@ mod tests {
         assert_eq!(restored.get_value("ui").unwrap().to_long().unwrap(), 2000);
         assert_eq!(restored.get_value("l").unwrap().to_long().unwrap(), 100000);
         assert_eq!(restored.get_value("ul").unwrap().to_long().unwrap(), 200000);
-        assert!((restored.get_value("f").unwrap().to_double().unwrap() - std::f64::consts::PI).abs() < 0.01);
-        assert!((restored.get_value("d").unwrap().to_double().unwrap() - std::f64::consts::E).abs() < 0.00001);
+        assert!(
+            (restored.get_value("f").unwrap().to_double().unwrap() - std::f64::consts::PI).abs()
+                < 0.01
+        );
+        assert!(
+            (restored.get_value("d").unwrap().to_double().unwrap() - std::f64::consts::E).abs()
+                < 0.00001
+        );
         assert_eq!(restored.get_value("str").unwrap().to_string(), "hello");
 
         let bytes_val = restored.get_value("bytes").unwrap();
@@ -1283,7 +1402,9 @@ mod tests {
         // Test that bytes are properly encoded/decoded as base64
         let mut original = ValueContainer::new();
         let test_data = vec![0x00, 0x01, 0x02, 0xFE, 0xFF];
-        original.add_value(Arc::new(BytesValue::new("data", test_data.clone()))).unwrap();
+        original
+            .add_value(Arc::new(BytesValue::new("data", test_data.clone())))
+            .unwrap();
 
         let json = original.to_json().unwrap();
 
@@ -1333,7 +1454,10 @@ mod tests {
 
         let result = ValueContainer::from_json(json);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Unknown value type"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Unknown value type"));
     }
 
     #[test]
@@ -1355,7 +1479,10 @@ mod tests {
 
         let result = ValueContainer::from_json(json);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Missing 'name' field"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Missing 'name' field"));
     }
 
     #[test]
@@ -1367,9 +1494,15 @@ mod tests {
             .message_type("metrics_data")
             .build();
 
-        original.add_value(Arc::new(LongValue::new("timestamp", 1234567890).unwrap())).unwrap();
-        original.add_value(Arc::new(DoubleValue::new("cpu_usage", 45.7))).unwrap();
-        original.add_value(Arc::new(StringValue::new("hostname", "server1"))).unwrap();
+        original
+            .add_value(Arc::new(LongValue::new("timestamp", 1234567890).unwrap()))
+            .unwrap();
+        original
+            .add_value(Arc::new(DoubleValue::new("cpu_usage", 45.7)))
+            .unwrap();
+        original
+            .add_value(Arc::new(StringValue::new("hostname", "server1")))
+            .unwrap();
 
         // Serialize
         let bytes = original.serialize().unwrap();
@@ -1385,18 +1518,39 @@ mod tests {
         assert_eq!(restored.message_type(), "metrics_data");
         assert_eq!(restored.value_count(), 3);
 
-        assert_eq!(restored.get_value("timestamp").unwrap().to_long().unwrap(), 1234567890);
-        assert!((restored.get_value("cpu_usage").unwrap().to_double().unwrap() - 45.7).abs() < 0.0001);
-        assert_eq!(restored.get_value("hostname").unwrap().to_string(), "server1");
+        assert_eq!(
+            restored.get_value("timestamp").unwrap().to_long().unwrap(),
+            1234567890
+        );
+        assert!(
+            (restored
+                .get_value("cpu_usage")
+                .unwrap()
+                .to_double()
+                .unwrap()
+                - 45.7)
+                .abs()
+                < 0.0001
+        );
+        assert_eq!(
+            restored.get_value("hostname").unwrap().to_string(),
+            "server1"
+        );
     }
 
     #[test]
     fn test_deserialization_multiple_values_same_name() {
         // Create container with multiple values with same name
         let mut original = ValueContainer::new();
-        original.add_value(Arc::new(IntValue::new("tag", 1))).unwrap();
-        original.add_value(Arc::new(IntValue::new("tag", 2))).unwrap();
-        original.add_value(Arc::new(IntValue::new("tag", 3))).unwrap();
+        original
+            .add_value(Arc::new(IntValue::new("tag", 1)))
+            .unwrap();
+        original
+            .add_value(Arc::new(IntValue::new("tag", 2)))
+            .unwrap();
+        original
+            .add_value(Arc::new(IntValue::new("tag", 3)))
+            .unwrap();
 
         let json = original.to_json().unwrap();
         let restored = ValueContainer::from_json(&json).unwrap();

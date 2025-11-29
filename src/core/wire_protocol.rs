@@ -72,8 +72,8 @@
 //! //         @data={{[count,int_value,42];[name,string_value,Alice];}};
 //! ```
 
-use crate::core::{ContainerError, Result, Value, ValueContainer};
 use crate::core::value_types::ValueType;
+use crate::core::{ContainerError, Result, Value, ValueContainer};
 use crate::values::ArrayValue;
 use std::sync::Arc;
 
@@ -165,36 +165,16 @@ fn serialize_value_cpp(value: &Arc<dyn Value>) -> Result<String> {
 
     // Serialize data based on type
     let data_str = match value_type {
-        ValueType::Bool => {
-            if value.to_bool()? { "true" } else { "false" }.to_string()
-        }
-        ValueType::Short => {
-            value.to_short()?.to_string()
-        }
-        ValueType::UShort => {
-            value.to_ushort()?.to_string()
-        }
-        ValueType::Int => {
-            value.to_int()?.to_string()
-        }
-        ValueType::UInt => {
-            value.to_uint()?.to_string()
-        }
-        ValueType::Long | ValueType::LLong => {
-            value.to_long()?.to_string()
-        }
-        ValueType::ULong | ValueType::ULLong => {
-            value.to_ulong()?.to_string()
-        }
-        ValueType::Float => {
-            value.to_float()?.to_string()
-        }
-        ValueType::Double => {
-            value.to_double()?.to_string()
-        }
-        ValueType::String => {
-            value.to_string()
-        }
+        ValueType::Bool => if value.to_bool()? { "true" } else { "false" }.to_string(),
+        ValueType::Short => value.to_short()?.to_string(),
+        ValueType::UShort => value.to_ushort()?.to_string(),
+        ValueType::Int => value.to_int()?.to_string(),
+        ValueType::UInt => value.to_uint()?.to_string(),
+        ValueType::Long | ValueType::LLong => value.to_long()?.to_string(),
+        ValueType::ULong | ValueType::ULLong => value.to_ulong()?.to_string(),
+        ValueType::Float => value.to_float()?.to_string(),
+        ValueType::Double => value.to_double()?.to_string(),
+        ValueType::String => value.to_string(),
         ValueType::Bytes => {
             // Convert bytes to hex string (matching C++ hex encoding)
             use crate::values::BytesValue;
@@ -219,9 +199,7 @@ fn serialize_value_cpp(value: &Arc<dyn Value>) -> Result<String> {
                 "0".to_string()
             }
         }
-        ValueType::Null => {
-            String::new()
-        }
+        ValueType::Null => String::new(),
     };
 
     Ok(format!("[{},{},{}];", name, type_name, data_str))
@@ -274,26 +252,22 @@ fn cpp_name_to_value_type(name: &str) -> Option<ValueType> {
 
 /// Convert bytes to hex string (uppercase, matching C++ format)
 fn bytes_to_hex(bytes: &[u8]) -> String {
-    bytes.iter()
-        .map(|b| format!("{:02x}", b))
-        .collect()
+    bytes.iter().map(|b| format!("{:02x}", b)).collect()
 }
 
 /// Convert hex string to bytes
 fn hex_to_bytes(hex: &str) -> Result<Vec<u8>> {
     if !hex.len().is_multiple_of(2) {
         return Err(ContainerError::InvalidDataFormat(
-            "Hex string must have even length".to_string()
+            "Hex string must have even length".to_string(),
         ));
     }
 
     (0..hex.len())
         .step_by(2)
         .map(|i| {
-            u8::from_str_radix(&hex[i..i+2], 16)
-                .map_err(|e| ContainerError::InvalidDataFormat(
-                    format!("Invalid hex byte: {}", e)
-                ))
+            u8::from_str_radix(&hex[i..i + 2], 16)
+                .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid hex byte: {}", e)))
         })
         .collect()
 }
@@ -339,8 +313,9 @@ pub fn deserialize_cpp_wire(wire_data: &str) -> Result<ValueContainer> {
             .map_err(|e| ContainerError::InvalidDataFormat(format!("Regex error: {}", e)))?;
 
         for cap in pair_regex.captures_iter(header_content) {
-            let id: u8 = cap[1].parse()
-                .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid header ID: {}", e)))?;
+            let id: u8 = cap[1].parse().map_err(|e| {
+                ContainerError::InvalidDataFormat(format!("Invalid header ID: {}", e))
+            })?;
             let value = cap[2].trim();
 
             match id {
@@ -379,10 +354,9 @@ pub fn deserialize_cpp_wire(wire_data: &str) -> Result<ValueContainer> {
             let type_name = &cap[2];
             let data_str = &cap[3];
 
-            let value_type = cpp_name_to_value_type(type_name)
-                .ok_or_else(|| ContainerError::InvalidDataFormat(
-                    format!("Unknown C++ type name: {}", type_name)
-                ))?;
+            let value_type = cpp_name_to_value_type(type_name).ok_or_else(|| {
+                ContainerError::InvalidDataFormat(format!("Unknown C++ type name: {}", type_name))
+            })?;
 
             // Parse value based on type
             let parsed_value: Arc<dyn Value> = match value_type {
@@ -391,58 +365,66 @@ pub fn deserialize_cpp_wire(wire_data: &str) -> Result<ValueContainer> {
                     Arc::new(BoolValue::new(name, val))
                 }
                 ValueType::Short => {
-                    let val: i16 = data_str.parse()
-                        .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid short: {}", e)))?;
+                    let val: i16 = data_str.parse().map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid short: {}", e))
+                    })?;
                     Arc::new(ShortValue::new(name, val))
                 }
                 ValueType::UShort => {
-                    let val: u16 = data_str.parse()
-                        .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid ushort: {}", e)))?;
+                    let val: u16 = data_str.parse().map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid ushort: {}", e))
+                    })?;
                     Arc::new(UShortValue::new(name, val))
                 }
                 ValueType::Int => {
-                    let val: i32 = data_str.parse()
-                        .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid int: {}", e)))?;
+                    let val: i32 = data_str.parse().map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid int: {}", e))
+                    })?;
                     Arc::new(IntValue::new(name, val))
                 }
                 ValueType::UInt => {
-                    let val: u32 = data_str.parse()
-                        .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid uint: {}", e)))?;
+                    let val: u32 = data_str.parse().map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid uint: {}", e))
+                    })?;
                     Arc::new(UIntValue::new(name, val))
                 }
                 ValueType::Long => {
-                    let val: i64 = data_str.parse()
-                        .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid long: {}", e)))?;
+                    let val: i64 = data_str.parse().map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid long: {}", e))
+                    })?;
                     Arc::new(LongValue::new(name, val)?)
                 }
                 ValueType::LLong => {
-                    let val: i64 = data_str.parse()
-                        .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid llong: {}", e)))?;
+                    let val: i64 = data_str.parse().map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid llong: {}", e))
+                    })?;
                     Arc::new(LLongValue::new(name, val))
                 }
                 ValueType::ULong => {
-                    let val: u64 = data_str.parse()
-                        .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid ulong: {}", e)))?;
+                    let val: u64 = data_str.parse().map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid ulong: {}", e))
+                    })?;
                     Arc::new(ULongValue::new(name, val)?)
                 }
                 ValueType::ULLong => {
-                    let val: u64 = data_str.parse()
-                        .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid ullong: {}", e)))?;
+                    let val: u64 = data_str.parse().map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid ullong: {}", e))
+                    })?;
                     Arc::new(ULLongValue::new(name, val))
                 }
                 ValueType::Float => {
-                    let val: f32 = data_str.parse()
-                        .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid float: {}", e)))?;
+                    let val: f32 = data_str.parse().map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid float: {}", e))
+                    })?;
                     Arc::new(FloatValue::new(name, val))
                 }
                 ValueType::Double => {
-                    let val: f64 = data_str.parse()
-                        .map_err(|e| ContainerError::InvalidDataFormat(format!("Invalid double: {}", e)))?;
+                    let val: f64 = data_str.parse().map_err(|e| {
+                        ContainerError::InvalidDataFormat(format!("Invalid double: {}", e))
+                    })?;
                     Arc::new(DoubleValue::new(name, val))
                 }
-                ValueType::String => {
-                    Arc::new(StringValue::new(name, data_str))
-                }
+                ValueType::String => Arc::new(StringValue::new(name, data_str)),
                 ValueType::Bytes => {
                     let bytes = hex_to_bytes(data_str)?;
                     Arc::new(BytesValue::new(name, bytes))
@@ -484,8 +466,12 @@ mod tests {
         container.set_source("client", "session");
         container.set_target("server", "handler");
         container.set_message_type("test_msg");
-        container.add_value(Arc::new(IntValue::new("count", 42))).unwrap();
-        container.add_value(Arc::new(StringValue::new("name", "Alice"))).unwrap();
+        container
+            .add_value(Arc::new(IntValue::new("count", 42)))
+            .unwrap();
+        container
+            .add_value(Arc::new(StringValue::new("name", "Alice")))
+            .unwrap();
 
         let wire_data = serialize_cpp_wire(&container).unwrap();
 
@@ -526,8 +512,12 @@ mod tests {
         let mut original = ValueContainer::new();
         original.set_source("sender", "s1");
         original.set_message_type("data");
-        original.add_value(Arc::new(IntValue::new("x", 100))).unwrap();
-        original.add_value(Arc::new(BoolValue::new("flag", true))).unwrap();
+        original
+            .add_value(Arc::new(IntValue::new("x", 100)))
+            .unwrap();
+        original
+            .add_value(Arc::new(BoolValue::new("flag", true)))
+            .unwrap();
 
         let wire_data = serialize_cpp_wire(&original).unwrap();
         let restored = deserialize_cpp_wire(&wire_data).unwrap();
@@ -549,7 +539,9 @@ mod tests {
 
         let mut container = ValueContainer::new();
         let test_bytes = vec![0x48, 0x65, 0x6c, 0x6c, 0x6f]; // "Hello"
-        container.add_value(Arc::new(BytesValue::new("data", test_bytes.clone()))).unwrap();
+        container
+            .add_value(Arc::new(BytesValue::new("data", test_bytes.clone())))
+            .unwrap();
 
         let wire_data = serialize_cpp_wire(&container).unwrap();
         assert!(wire_data.contains("48656c6c6f")); // Hex for "Hello"

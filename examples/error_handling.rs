@@ -144,9 +144,7 @@ fn result_combinators() {
     println!("Count (with defaults): {}", count);
 
     // Using and_then for chained operations
-    let result: Option<i32> = container
-        .get_value("score")
-        .and_then(|v| v.to_int().ok());
+    let result: Option<i32> = container.get_value("score").and_then(|v| v.to_int().ok());
     println!("Score as int: {:?}", result);
 
     // Processing multiple values with error collection

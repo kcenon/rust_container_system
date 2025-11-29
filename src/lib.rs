@@ -71,9 +71,15 @@ pub mod values;
 /// let value = Arc::new(IntValue::new("test", 42));
 /// ```
 pub mod prelude {
-    pub use crate::core::{ContainerError, Result, Value, ValueContainer, ValueContainerBuilder, ValueIter, ValueType};
     pub use crate::core::json_v2_adapter::{JsonV2Adapter, SerializationFormat};
-    pub use crate::values::{ArrayValue, BoolValue, BytesValue, ContainerValue, DoubleValue, FloatValue, IntValue, LLongValue, LongValue, ShortValue, StringValue, UIntValue, ULLongValue, ULongValue, UShortValue};
+    pub use crate::core::{
+        ContainerError, Result, Value, ValueContainer, ValueContainerBuilder, ValueIter, ValueType,
+    };
+    pub use crate::values::{
+        ArrayValue, BoolValue, BytesValue, ContainerValue, DoubleValue, FloatValue, IntValue,
+        LLongValue, LongValue, ShortValue, StringValue, UIntValue, ULLongValue, ULongValue,
+        UShortValue,
+    };
 }
 
 /// Re-export core types at root level
@@ -110,8 +116,12 @@ mod tests {
         container.set_target("target1", "sub2");
         container.set_message_type("test_type");
 
-        container.add_value(Arc::new(values::IntValue::new("count", 42))).expect("Failed to add value");
-        container.add_value(Arc::new(values::StringValue::new("name", "test"))).expect("Failed to add value");
+        container
+            .add_value(Arc::new(values::IntValue::new("count", 42)))
+            .expect("Failed to add value");
+        container
+            .add_value(Arc::new(values::StringValue::new("name", "test")))
+            .expect("Failed to add value");
 
         let json = container.to_json();
         assert!(json.is_ok());
