@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **MessagingContainerBuilder**: New fluent API for container construction aligned with C++ architecture
+  - `with_source(id, sub_id)` for sender information
+  - `with_target(id, sub_id)` for receiver information
+  - `with_type(type_name)` for message type
+  - `with_max_values(count)` for value limits
+  - Available via `rust_container_system::messaging::MessagingContainerBuilder`
+  - Also exported in `prelude` module
+- **Messaging Module**: New `src/messaging/` module for messaging-specific patterns
+
 ### Planned
 - SIMD optimizations using `packed_simd` crate
 - Binary deserialization support

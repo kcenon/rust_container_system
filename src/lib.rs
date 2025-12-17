@@ -61,6 +61,9 @@ pub mod core;
 /// Value implementations
 pub mod values;
 
+/// Messaging module for builder patterns aligned with C++ architecture
+pub mod messaging;
+
 /// Prelude for convenient imports
 ///
 /// ```rust
@@ -75,6 +78,7 @@ pub mod prelude {
     pub use crate::core::{
         ContainerError, Result, Value, ValueContainer, ValueContainerBuilder, ValueIter, ValueType,
     };
+    pub use crate::messaging::MessagingContainerBuilder;
     pub use crate::values::{
         ArrayValue, BoolValue, BytesValue, ContainerValue, DoubleValue, FloatValue, IntValue,
         LLongValue, LongValue, ShortValue, StringValue, UIntValue, ULLongValue, ULongValue,
