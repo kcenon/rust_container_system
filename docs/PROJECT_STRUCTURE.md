@@ -1,7 +1,7 @@
 # Project Structure
 
 > **Version**: 0.1.0
-> **Last Updated**: 2025-11-26
+> **Last Updated**: 2025-12-17
 
 This document describes the organization of the Rust Container System codebase.
 
@@ -39,7 +39,9 @@ rust_container_system/
 ├── src/                       # Source code
 │   ├── lib.rs                # Library entry point
 │   ├── core/                 # Core types and traits
-│   └── values/               # Value implementations
+│   ├── values/               # Value implementations
+│   ├── kcenon/               # Dependency Injection support
+│   └── messaging/            # Messaging builder patterns
 │
 ├── tests/                     # Integration tests
 │   ├── integration_tests.rs
@@ -54,7 +56,8 @@ rust_container_system/
 │   ├── nested_containers.rs
 │   ├── concurrency.rs
 │   ├── error_handling.rs
-│   └── deserialization.rs
+│   ├── deserialization.rs
+│   └── dependency_injection.rs
 │
 ├── benches/                   # Benchmarks
 │   └── container_benchmarks.rs
@@ -84,7 +87,7 @@ rust_container_system/
 **`src/lib.rs`**
 
 The main library entry point that:
-- Declares public modules (`core`, `values`)
+- Declares public modules (`core`, `values`, `messaging`, `kcenon`)
 - Defines the `prelude` module for convenient imports
 - Re-exports commonly used types at the root level
 
@@ -92,11 +95,15 @@ The main library entry point that:
 // Public modules
 pub mod core;
 pub mod values;
+pub mod messaging;
+pub mod kcenon;
 
 // Prelude for convenient imports
 pub mod prelude {
     pub use crate::core::{...};
     pub use crate::values::{...};
+    pub use crate::kcenon::{ArcContainerProvider, ContainerFactory, DefaultContainerFactory};
+    pub use crate::messaging::MessagingContainerBuilder;
 }
 
 // Root-level re-exports
@@ -158,6 +165,34 @@ Value (trait)
 ├── ContainerValue
 └── ArrayValue
 ```
+
+### Kcenon Module (Dependency Injection)
+
+**`src/kcenon/`** - Dependency Injection support aligned with C++ Kcenon architecture
+
+| File | Purpose | Key Types |
+|------|---------|-----------|
+| `mod.rs` | Module declarations and re-exports | - |
+| `di.rs` | DI traits and implementations | `ContainerFactory`, `DefaultContainerFactory`, `ArcContainerProvider` |
+
+#### DI Type Hierarchy
+
+```
+ContainerFactory (trait)
+├── DefaultContainerFactory
+│   └── DefaultContainerFactoryBuilder
+└── ArcContainerProvider
+    └── ArcContainerProviderBuilder
+```
+
+### Messaging Module
+
+**`src/messaging/`** - Messaging builder patterns aligned with C++ container_system architecture
+
+| File | Purpose | Key Types |
+|------|---------|-----------|
+| `mod.rs` | Module declarations and re-exports | - |
+| `builder.rs` | Messaging container builder | `MessagingContainerBuilder` |
 
 ---
 
@@ -341,6 +376,7 @@ harness = false
 | `concurrency.rs` | Thread-safe operations | `cargo run --example concurrency` |
 | `error_handling.rs` | Error patterns | `cargo run --example error_handling` |
 | `deserialization.rs` | Parsing data | `cargo run --example deserialization` |
+| `dependency_injection.rs` | DI patterns with ContainerFactory | `cargo run --example dependency_injection` |
 
 ---
 
