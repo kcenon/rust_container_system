@@ -64,6 +64,9 @@ pub mod values;
 /// Messaging module for builder patterns aligned with C++ architecture
 pub mod messaging;
 
+/// Kcenon module for Dependency Injection support aligned with C++ architecture
+pub mod kcenon;
+
 /// Prelude for convenient imports
 ///
 /// ```rust
@@ -78,6 +81,7 @@ pub mod prelude {
     pub use crate::core::{
         ContainerError, Result, Value, ValueContainer, ValueContainerBuilder, ValueIter, ValueType,
     };
+    pub use crate::kcenon::{ArcContainerProvider, ContainerFactory, DefaultContainerFactory};
     pub use crate::messaging::MessagingContainerBuilder;
     pub use crate::values::{
         ArrayValue, BoolValue, BytesValue, ContainerValue, DoubleValue, FloatValue, IntValue,
