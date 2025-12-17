@@ -121,6 +121,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+### Using MessagingContainerBuilder
+
+For messaging-specific use cases aligned with C++ architecture:
+
+```rust
+use rust_container_system::messaging::MessagingContainerBuilder;
+use rust_container_system::values::IntValue;
+use std::sync::Arc;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Build container with fluent API
+    let mut container = MessagingContainerBuilder::new()
+        .with_source("client_app", "session_123")
+        .with_target("server_app", "main")
+        .with_type("user_request")
+        .with_max_values(1000)
+        .build();
+
+    // Add values after building
+    container.add_value(Arc::new(IntValue::new("request_id", 42)))?;
+
+    Ok(())
+}
+```
+
 ### More Examples
 
 ```bash
