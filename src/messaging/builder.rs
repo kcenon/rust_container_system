@@ -293,19 +293,11 @@ mod tests {
 
     #[test]
     fn test_builder_with_max_values() {
-        let mut container = MessagingContainerBuilder::new()
-            .with_max_values(3)
-            .build();
+        let mut container = MessagingContainerBuilder::new().with_max_values(3).build();
 
-        assert!(container
-            .add_value(Arc::new(IntValue::new("a", 1)))
-            .is_ok());
-        assert!(container
-            .add_value(Arc::new(IntValue::new("b", 2)))
-            .is_ok());
-        assert!(container
-            .add_value(Arc::new(IntValue::new("c", 3)))
-            .is_ok());
+        assert!(container.add_value(Arc::new(IntValue::new("a", 1))).is_ok());
+        assert!(container.add_value(Arc::new(IntValue::new("b", 2))).is_ok());
+        assert!(container.add_value(Arc::new(IntValue::new("c", 3))).is_ok());
         assert!(container
             .add_value(Arc::new(IntValue::new("d", 4)))
             .is_err());
@@ -380,7 +372,10 @@ mod tests {
 
         assert_eq!(container.value_count(), 2);
         assert_eq!(container.get_value("count").unwrap().to_int().unwrap(), 42);
-        assert_eq!(container.get_value("name").unwrap().to_string(), "test_value");
+        assert_eq!(
+            container.get_value("name").unwrap().to_string(),
+            "test_value"
+        );
     }
 
     #[test]
