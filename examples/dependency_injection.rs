@@ -112,10 +112,7 @@ fn main() {
         .build();
     let container = configured_factory.create();
     println!("   Message type: {}", container.message_type());
-    println!(
-        "   Max values: {}",
-        configured_factory.default_max_values()
-    );
+    println!("   Max values: {}", configured_factory.default_max_values());
 
     // 3. Arc-based provider for sharing across components
     println!("\n3. ArcContainerProvider (Shared Ownership):");
@@ -187,8 +184,16 @@ fn main() {
         "target_session",
         "full_config_message",
     );
-    println!("   Source: {} / {}", container.source_id(), container.source_sub_id());
-    println!("   Target: {} / {}", container.target_id(), container.target_sub_id());
+    println!(
+        "   Source: {} / {}",
+        container.source_id(),
+        container.source_sub_id()
+    );
+    println!(
+        "   Target: {} / {}",
+        container.target_id(),
+        container.target_sub_id()
+    );
     println!("   Type: {}", container.message_type());
 
     println!("\n=== Example Complete ===");

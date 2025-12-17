@@ -451,13 +451,8 @@ mod tests {
     #[test]
     fn test_default_factory_create_with_header() {
         let factory = DefaultContainerFactory::new();
-        let container = factory.create_with_header(
-            "source",
-            "sub_source",
-            "target",
-            "sub_target",
-            "request",
-        );
+        let container =
+            factory.create_with_header("source", "sub_source", "target", "sub_target", "request");
 
         assert_eq!(container.source_id(), "source");
         assert_eq!(container.source_sub_id(), "sub_source");
