@@ -61,7 +61,7 @@ impl MessageService {
     fn create_response(&self, request: &ValueContainer) -> ValueContainer {
         let mut response = self.factory.create_with_type("response");
         response.set_source(&self.service_id, "main");
-        response.set_target(&request.source_id(), &request.source_sub_id());
+        response.set_target(request.source_id(), request.source_sub_id());
         response
     }
 }
