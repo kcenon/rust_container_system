@@ -1,7 +1,7 @@
 # Rust Container System Documentation
 
 > **Version**: 0.1.0
-> **Last Updated**: 2025-11-26
+> **Last Updated**: 2025-12-17
 > **Status**: Production Ready (with conditions)
 
 Welcome to the Rust Container System documentation! This guide will help you navigate the available resources.
@@ -75,6 +75,8 @@ docs/
 | **Thread Safety** | Built-in `Arc<RwLock<T>>` | [Features](FEATURES.md#13-thread-safety) |
 | **Serialization** | JSON, XML, Wire Protocol | [Features](FEATURES.md#12-serialization) |
 | **Builder Pattern** | Fluent API for construction | [API Reference](API_REFERENCE.md#valuecontainerbuilder) |
+| **Dependency Injection** | ContainerFactory trait for DI patterns | [Features](FEATURES.md#24-dependency-injection-support) |
+| **Messaging Builder** | MessagingContainerBuilder for messaging patterns | [API Reference](API_REFERENCE.md#messagingcontainerbuilder) |
 | **Zero Unsafe** | 100% safe Rust | [Production Quality](PRODUCTION_QUALITY.md) |
 
 ## Performance Highlights
