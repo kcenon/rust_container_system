@@ -12,7 +12,8 @@ Get up and running with the Rust Container System in just a few steps.
 3. [Add Values](#3-add-values)
 4. [Retrieve Values](#4-retrieve-values)
 5. [Serialize Data](#5-serialize-data)
-6. [Next Steps](#6-next-steps)
+6. [Using ContainerFactory (Optional)](#6-using-containerfactory-optional)
+7. [Next Steps](#7-next-steps)
 
 ---
 
@@ -169,7 +170,40 @@ Name: Alice
 
 ---
 
-## 6. Next Steps
+## 6. Using ContainerFactory (Optional)
+
+For dependency injection patterns, use the `ContainerFactory` trait:
+
+```rust
+use rust_container_system::kcenon::{ContainerFactory, DefaultContainerFactory};
+
+fn main() {
+    // Create a factory with custom defaults
+    let factory = DefaultContainerFactory::builder()
+        .with_default_message_type("my_app_message")
+        .with_default_max_values(500)
+        .build();
+
+    // Create containers using the factory
+    let container1 = factory.create();
+    let container2 = factory.create_with_type("custom_type");
+
+    println!("Container 1 type: {}", container1.message_type());
+    println!("Container 2 type: {}", container2.message_type());
+}
+```
+
+**Output:**
+```
+Container 1 type: my_app_message
+Container 2 type: custom_type
+```
+
+**See also**: [Dependency Injection Support](../FEATURES.md#24-dependency-injection-support) for thread-safe patterns.
+
+---
+
+## 7. Next Steps
 
 ### Run the Examples
 
@@ -185,6 +219,9 @@ cargo run --example nested_containers
 
 # Thread safety
 cargo run --example concurrency
+
+# Dependency injection patterns
+cargo run --example dependency_injection
 ```
 
 ### Learn More
