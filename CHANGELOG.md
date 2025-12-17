@@ -20,6 +20,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Available via `rust_container_system::messaging::MessagingContainerBuilder`
   - Also exported in `prelude` module
 - **Messaging Module**: New `src/messaging/` module for messaging-specific patterns
+- **Dependency Injection Support**: New `kcenon` module for DI framework integration
+  - `ContainerFactory` trait for abstracting container creation
+  - `DefaultContainerFactory` with configurable defaults
+  - `ArcContainerProvider` for thread-safe Arc-based dependency injection
+  - Builder pattern for factory configuration
+  - Available via `rust_container_system::kcenon::*`
+  - Also exported in `prelude` module
+- **DI Example**: New `examples/dependency_injection.rs` demonstrating DI patterns
 
 ### Planned
 - SIMD optimizations using `packed_simd` crate

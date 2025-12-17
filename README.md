@@ -38,6 +38,7 @@ Comprehensive documentation organized by use case:
 - **Zero Unsafe**: 100% safe Rust, no `unsafe` blocks
 - **Builder Pattern**: Fluent API for ergonomic construction
 - **Iterator Support**: Standard Rust iteration with `ExactSizeIterator`
+- **Dependency Injection**: ContainerFactory trait for DI frameworks
 
 **→ See [FEATURES.md](docs/FEATURES.md) for detailed documentation and examples**
 
@@ -146,6 +147,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+### Using Dependency Injection
+
+For loosely-coupled architectures with dependency injection:
+
+```rust
+use rust_container_system::prelude::*;
+use std::sync::Arc;
+
+// Create a shared factory for dependency injection
+let factory: Arc<dyn ContainerFactory> = Arc::new(
+    ArcContainerProvider::builder()
+        .with_default_message_type("app_message")
+        .build()
+);
+
+// Inject into services
+struct MessageService {
+    factory: Arc<dyn ContainerFactory>,
+}
+
+impl MessageService {
+    fn create_request(&self, msg_type: &str) -> ValueContainer {
+        self.factory.create_with_type(msg_type)
+    }
+}
+
+let service = MessageService { factory };
+let container = service.create_request("user_request");
+```
+
 ### More Examples
 
 ```bash
@@ -157,6 +188,9 @@ cargo run --example serialization
 
 # Nested containers
 cargo run --example nested_containers
+
+# Dependency injection patterns
+cargo run --example dependency_injection
 ```
 
 **→ See [examples/](examples/) directory for more examples**  
