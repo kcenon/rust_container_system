@@ -1,7 +1,7 @@
 # Features Documentation
 
 **Version:** 0.1.0
-**Last Updated:** 2025-11-16
+**Last Updated:** 2025-12-17
 
 This document provides comprehensive documentation of all features in the Rust Container System.
 
@@ -17,6 +17,8 @@ This document provides comprehensive documentation of all features in the Rust C
    - [Nested Structures](#21-nested-structures)
    - [Builder Pattern](#22-builder-pattern)
    - [Iterator Support](#23-iterator-support)
+   - [Dependency Injection Support](#24-dependency-injection-support)
+   - [Messaging Container Builder](#25-messaging-container-builder)
 3. [Real-World Examples](#3-real-world-examples)
    - [Messaging System](#31-messaging-system)
    - [Configuration Management](#32-configuration-management)
@@ -441,6 +443,175 @@ println!("Size: {} to {:?}", min, max);
 for (i, value) in container.iter().enumerate() {
     println!("{}: {}", i, value.name());
 }
+```
+
+---
+
+### 2.4 Dependency Injection Support
+
+The `kcenon` module provides Dependency Injection (DI) capabilities for `ValueContainer` components, aligned with the C++ Kcenon architecture while embracing Rust idioms.
+
+#### 2.4.1 ContainerFactory Trait
+
+The `ContainerFactory` trait defines the contract for creating containers, enabling dependency injection and testability.
+
+```rust
+use rust_container_system::kcenon::{ContainerFactory, DefaultContainerFactory};
+
+// Using the default factory
+let factory = DefaultContainerFactory::new();
+let container = factory.create();
+assert_eq!(container.message_type(), "data_container");
+
+// Creating with specific message type
+let container = factory.create_with_type("user_request");
+assert_eq!(container.message_type(), "user_request");
+
+// Creating with full header configuration
+let container = factory.create_with_header(
+    "source_app", "source_session",
+    "target_app", "target_handler",
+    "data_transfer"
+);
+```
+
+#### 2.4.2 Configured Factory
+
+Use the builder pattern to customize factory defaults:
+
+```rust
+use rust_container_system::kcenon::{ContainerFactory, DefaultContainerFactory};
+
+let factory = DefaultContainerFactory::builder()
+    .with_default_message_type("custom_type")
+    .with_default_max_values(500)
+    .build();
+
+let container = factory.create();
+assert_eq!(container.message_type(), "custom_type");
+```
+
+#### 2.4.3 Thread-Safe Injection with ArcContainerProvider
+
+For multi-threaded applications, use `ArcContainerProvider` with `Arc`:
+
+```rust
+use rust_container_system::kcenon::{ContainerFactory, ArcContainerProvider};
+use std::sync::Arc;
+
+// Create shared provider
+let provider: Arc<dyn ContainerFactory> = Arc::new(ArcContainerProvider::new());
+
+// Clone for multiple consumers (cheap Arc clone)
+let provider_clone = Arc::clone(&provider);
+
+// Use in different threads
+std::thread::spawn(move || {
+    let container = provider_clone.create();
+    // Process container...
+});
+
+// Use in main thread
+let container = provider.create();
+```
+
+#### 2.4.4 Custom Factory Implementation
+
+Implement `ContainerFactory` for custom container creation logic:
+
+```rust
+use rust_container_system::kcenon::ContainerFactory;
+use rust_container_system::core::ValueContainer;
+
+struct PrefixedFactory {
+    prefix: String,
+}
+
+impl ContainerFactory for PrefixedFactory {
+    fn create(&self) -> ValueContainer {
+        let mut container = ValueContainer::new();
+        container.set_message_type(format!("{}_default", self.prefix));
+        container
+    }
+
+    fn create_with_type(&self, message_type: &str) -> ValueContainer {
+        let mut container = ValueContainer::new();
+        container.set_message_type(format!("{}_{}", self.prefix, message_type));
+        container
+    }
+}
+
+let factory = PrefixedFactory { prefix: "app".to_string() };
+assert_eq!(factory.create().message_type(), "app_default");
+assert_eq!(factory.create_with_type("request").message_type(), "app_request");
+```
+
+---
+
+### 2.5 Messaging Container Builder
+
+The `messaging` module provides `MessagingContainerBuilder` for creating `ValueContainer` instances with messaging-specific header configurations.
+
+#### 2.5.1 Fluent Builder API
+
+```rust
+use rust_container_system::messaging::MessagingContainerBuilder;
+
+let container = MessagingContainerBuilder::new()
+    .with_source("client", "session_1")
+    .with_target("server", "main_handler")
+    .with_type("request")
+    .with_max_values(500)
+    .build();
+
+assert_eq!(container.source_id(), "client");
+assert_eq!(container.source_sub_id(), "session_1");
+assert_eq!(container.target_id(), "server");
+assert_eq!(container.target_sub_id(), "main_handler");
+assert_eq!(container.message_type(), "request");
+```
+
+#### 2.5.2 Builder vs ValueContainerBuilder
+
+| Feature | MessagingContainerBuilder | ValueContainerBuilder |
+|---------|---------------------------|----------------------|
+| Source/Target | `with_source()`, `with_target()` | `source()`, `target()` |
+| Message Type | `with_type()` | `message_type()` |
+| Max Values | `with_max_values()` | `max_values()` |
+| Focus | Messaging patterns | General purpose |
+
+#### 2.5.3 Complete Messaging Example
+
+```rust
+use rust_container_system::messaging::MessagingContainerBuilder;
+use rust_container_system::values::{IntValue, StringValue};
+use std::sync::Arc;
+
+// Create request message
+let mut request = MessagingContainerBuilder::new()
+    .with_source("web_client", "session_xyz")
+    .with_target("api_server", "user_handler")
+    .with_type("create_user")
+    .build();
+
+// Add payload
+request.add_value(Arc::new(StringValue::new("username", "alice"))).unwrap();
+request.add_value(Arc::new(IntValue::new("age", 28))).unwrap();
+
+// Serialize and send
+let wire_data = request.serialize_cpp_wire().unwrap();
+
+// ... send over network ...
+
+// Create response
+let mut response = MessagingContainerBuilder::new()
+    .with_source("api_server", "user_handler")
+    .with_target("web_client", "session_xyz")
+    .with_type("create_user_response")
+    .build();
+
+response.add_value(Arc::new(IntValue::new("status", 200))).unwrap();
+response.add_value(Arc::new(IntValue::new("user_id", 12345))).unwrap();
 ```
 
 ---

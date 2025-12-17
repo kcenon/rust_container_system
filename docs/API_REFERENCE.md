@@ -1,7 +1,7 @@
 # API Reference
 
 > **Version**: 0.1.0
-> **Last Updated**: 2025-11-26
+> **Last Updated**: 2025-12-17
 
 This document provides a complete reference for the Rust Container System API.
 
@@ -21,6 +21,12 @@ This document provides a complete reference for the Rust Container System API.
   - [BytesValue](#bytesvalue)
   - [ContainerValue](#containervalue)
   - [ArrayValue](#arrayvalue)
+- [Dependency Injection (kcenon)](#dependency-injection-kcenon)
+  - [ContainerFactory Trait](#containerfactory-trait)
+  - [DefaultContainerFactory](#defaultcontainerfactory)
+  - [ArcContainerProvider](#arccontainerprovider)
+- [Messaging Module](#messaging-module)
+  - [MessagingContainerBuilder](#messagingcontainerbuilder)
 - [Serialization](#serialization)
 - [Thread Safety](#thread-safety)
 - [Constants](#constants)
@@ -81,6 +87,18 @@ use rust_container_system::values::{
     FloatValue, DoubleValue, StringValue, BytesValue,
     ContainerValue, ArrayValue,
 };
+
+// Dependency Injection (kcenon module)
+use rust_container_system::kcenon::{
+    ContainerFactory,
+    DefaultContainerFactory,
+    DefaultContainerFactoryBuilder,
+    ArcContainerProvider,
+    ArcContainerProviderBuilder,
+};
+
+// Messaging module
+use rust_container_system::messaging::MessagingContainerBuilder;
 ```
 
 ---
@@ -593,6 +611,225 @@ for elem in array.elements() {
 ```
 
 **See also**: [ARRAY_VALUE_GUIDE.md](ARRAY_VALUE_GUIDE.md) for detailed array documentation.
+
+---
+
+## Dependency Injection (kcenon)
+
+The `kcenon` module provides Dependency Injection support for `ValueContainer` components, aligned with the C++ Kcenon architecture while embracing Rust idioms.
+
+### ContainerFactory Trait
+
+The core abstraction for container creation, enabling dependency injection and testability.
+
+```rust
+pub trait ContainerFactory: Send + Sync {
+    /// Create a new ValueContainer with default settings
+    fn create(&self) -> ValueContainer;
+
+    /// Create a new ValueContainer with specified message type
+    fn create_with_type(&self, message_type: &str) -> ValueContainer;
+
+    /// Create a new ValueContainer with full header configuration
+    fn create_with_header(
+        &self,
+        source_id: &str,
+        source_sub_id: &str,
+        target_id: &str,
+        target_sub_id: &str,
+        message_type: &str,
+    ) -> ValueContainer;
+}
+```
+
+#### Custom Factory Implementation
+
+```rust
+use rust_container_system::kcenon::ContainerFactory;
+use rust_container_system::core::ValueContainer;
+
+struct CustomFactory {
+    prefix: String,
+}
+
+impl ContainerFactory for CustomFactory {
+    fn create(&self) -> ValueContainer {
+        let mut container = ValueContainer::new();
+        container.set_message_type(format!("{}_message", self.prefix));
+        container
+    }
+
+    fn create_with_type(&self, message_type: &str) -> ValueContainer {
+        let mut container = ValueContainer::new();
+        container.set_message_type(format!("{}_{}", self.prefix, message_type));
+        container
+    }
+}
+
+let factory = CustomFactory { prefix: "app".to_string() };
+let container = factory.create();
+assert_eq!(container.message_type(), "app_message");
+```
+
+---
+
+### DefaultContainerFactory
+
+Basic implementation with configurable defaults for message type and maximum values.
+
+#### Constructors
+
+| Method | Description |
+|--------|-------------|
+| `new()` | Create with default settings (message_type: "data_container", max_values: 10,000) |
+| `builder()` | Create a builder for custom configuration |
+| `default_message_type()` | Get the configured default message type |
+| `default_max_values()` | Get the configured default max values |
+
+```rust
+use rust_container_system::kcenon::{ContainerFactory, DefaultContainerFactory};
+
+// Basic usage
+let factory = DefaultContainerFactory::new();
+let container = factory.create();
+assert_eq!(container.message_type(), "data_container");
+
+// With builder
+let factory = DefaultContainerFactory::builder()
+    .with_default_message_type("custom_type")
+    .with_default_max_values(500)
+    .build();
+
+let container = factory.create();
+assert_eq!(container.message_type(), "custom_type");
+```
+
+#### DefaultContainerFactoryBuilder
+
+| Method | Description |
+|--------|-------------|
+| `new()` | Create new builder with defaults |
+| `with_default_message_type(type)` | Set default message type |
+| `with_default_max_values(n)` | Set default maximum values |
+| `build()` | Build the factory |
+
+---
+
+### ArcContainerProvider
+
+A thread-safe container provider designed for `Arc`-based dependency injection. Suitable for scenarios where factory instances need to be shared across threads.
+
+#### Constructors
+
+| Method | Description |
+|--------|-------------|
+| `new()` | Create with default settings |
+| `with_factory(factory)` | Create with custom DefaultContainerFactory |
+| `builder()` | Create a builder for custom configuration |
+
+```rust
+use rust_container_system::kcenon::{ContainerFactory, ArcContainerProvider};
+use std::sync::Arc;
+
+// Create a shared provider
+let provider: Arc<dyn ContainerFactory> = Arc::new(ArcContainerProvider::new());
+
+// Share across threads
+let provider_for_thread = Arc::clone(&provider);
+std::thread::spawn(move || {
+    let container = provider_for_thread.create();
+    // Use container...
+});
+
+// Use in main thread
+let container = provider.create();
+```
+
+#### ArcContainerProviderBuilder
+
+| Method | Description |
+|--------|-------------|
+| `new()` | Create new builder |
+| `with_default_message_type(type)` | Set default message type |
+| `with_default_max_values(n)` | Set default maximum values |
+| `build()` | Build the provider |
+
+```rust
+use rust_container_system::kcenon::{ContainerFactory, ArcContainerProvider};
+
+let provider = ArcContainerProvider::builder()
+    .with_default_message_type("service_message")
+    .with_default_max_values(100)
+    .build();
+
+let container = provider.create();
+assert_eq!(container.message_type(), "service_message");
+```
+
+---
+
+## Messaging Module
+
+The `messaging` module provides builder patterns aligned with the C++ container_system architecture for creating `ValueContainer` instances with messaging-specific header configurations.
+
+### MessagingContainerBuilder
+
+A fluent builder for constructing `ValueContainer` instances with messaging headers.
+
+#### Methods
+
+| Method | Description |
+|--------|-------------|
+| `new()` | Create a new builder with default values |
+| `with_source(id, sub_id)` | Set source (sender) information |
+| `with_target(id, sub_id)` | Set target (receiver) information |
+| `with_type(type_name)` | Set the message type |
+| `with_max_values(count)` | Set maximum values limit |
+| `build()` | Build the ValueContainer |
+
+#### Default Values
+
+- Source ID/Sub-ID: empty strings
+- Target ID/Sub-ID: empty strings
+- Message type: "data_container"
+- Max values: DEFAULT_MAX_VALUES (10,000)
+
+#### Basic Usage
+
+```rust
+use rust_container_system::messaging::MessagingContainerBuilder;
+
+let container = MessagingContainerBuilder::new()
+    .with_source("client", "session_1")
+    .with_target("server", "main")
+    .with_type("request")
+    .with_max_values(500)
+    .build();
+
+assert_eq!(container.source_id(), "client");
+assert_eq!(container.source_sub_id(), "session_1");
+assert_eq!(container.target_id(), "server");
+assert_eq!(container.target_sub_id(), "main");
+assert_eq!(container.message_type(), "request");
+```
+
+#### Adding Values After Build
+
+```rust
+use rust_container_system::messaging::MessagingContainerBuilder;
+use rust_container_system::values::{IntValue, StringValue};
+use std::sync::Arc;
+
+let mut container = MessagingContainerBuilder::new()
+    .with_source("app", "instance_1")
+    .with_type("data_transfer")
+    .build();
+
+container.add_value(Arc::new(IntValue::new("count", 42)))?;
+container.add_value(Arc::new(StringValue::new("name", "test_value")))?;
+
+assert_eq!(container.value_count(), 2);
+```
 
 ---
 
